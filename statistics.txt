@@ -1,0 +1,30 @@
+---------------------------Simulation statistics--------------------------
+Clientes:
+	Total clientes no recinto				: 182 - 
+	Total clientes na Montanha russa 			: 84
+	Total clientes na fila exterior 			: 56
+	Total clientes na fila interior 			: 45
+
+Desistências:
+	Desistências na fila exterior 				: 14
+	Desistências na fila interior 				: 26
+	Total de desistências 						: 40 - retirado por espaço.
+	
+Tempo médio espera:
+	Tempo médio na fila exterior 			: 01:42	
+	Tempo médio espera no recinto (VIP Frente) 	: 00:55
+	Tempo médio espera no recinto (VIP)  		: 01:22
+	Tempo médio espera no recinto (Normal) 		: 02:34
+
+Tempo máximo:
+	Tempo máximo no recinto 			: 10:46
+	Tempo máximo na fila exterior 			: 01:42 - retirado por espaço.
+	Tempo máximo na fila interior (VIP Frente) 	: 00:19
+	Tempo máximo na fila interior (VIP) 		: 00:19
+	Tempo máximo na fila interior (Normal) 		: 00:19
+	
+Avarias:
+	Tempo médio de reparação de avarias		: 02:55
+	Numero total de avarias				: 4
+
+--------------------------------------------------------------------------
