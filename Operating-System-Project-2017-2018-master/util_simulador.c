@@ -25,6 +25,7 @@ int * read_method(int numberargs, char file_selected[50]){
 																								return 0;
 																}
 																printf("Loaded default file insted\n");
+																//test
 								}
 
 								int configurations[CONFIGURATION_PARAMS_NUMBER];
