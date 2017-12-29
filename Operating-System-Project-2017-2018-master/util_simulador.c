@@ -26,7 +26,7 @@ int * read_method(int numberargs, char file_selected[50]){
 																}
 																printf("Loaded default file insted\n");
 
-								} 
+								}
 
 
 								int configurations[CONFIGURATION_PARAMS_NUMBER];
@@ -34,16 +34,22 @@ int * read_method(int numberargs, char file_selected[50]){
 								char param[23];
 
 								while(fscanf(configuration_file, "%s : %d // %*[^\n]s", param, &value)!=EOF) {
-																if(!strcmp("simulation_debug",param)) retorna[0] = value;
-																else if(!strcmp("simulation_population",param)) retorna[1] = value;
-																else if(!strcmp("aquapark_start",param)) retorna[2] = value;
-																else if(!strcmp("aquapark_close",param)) retorna[3] = value;
-																else if(!strcmp("aquapark_capacity",param)) retorna[4] = value;
-																else if(!strcmp("aquapark_queue",param)) retorna[5] = value;
-																else if(!strcmp("person_vip",param)) retorna[6] = value;
-																else if(!strcmp("person_max_waiting_time",param)) retorna[7] = value;
-																else if(!strcmp("person_frequency",param)) retorna[8] = value;
-																else if(!strcmp("couple_chance",param)) retorna[9] = value;
+																if(!strcmp("mr_capacidade",param)) retorna[0] = value;
+																else if(!strcmp("mr_inicio",param)) retorna[1] = value;
+																else if(!strcmp("mr_fim",param)) retorna[2] = value;
+																else if(!strcmp("bilh_encerra",param)) retorna[3] = value;
+																else if(!strcmp("cap_carro1",param)) retorna[4] = value;
+																else if(!strcmp("cap_carro2",param)) retorna[5] = value;
+																else if(!strcmp("cap_f_interior",param)) retorna[6] = value;
+																else if(!strcmp("perc_cl_normal",param)) retorna[7] = value;
+																else if(!strcmp("mr_temp_volta",param)) retorna[8] = value;
+																else if(!strcmp("perc_cl_vip",param)) retorna[9] = value;
+																else if(!strcmp("perc_cl_vip_frente",param)) retorna[10] = value;
+																else if(!strcmp("perc_avaria",param)) retorna[11] = value;
+																else if(!strcmp("perc_des_fila_ext",param)) retorna[12] = value;
+																else if(!strcmp("perc_des_cl_normal",param)) retorna[13] = value;
+																else if(!strcmp("per_des_cl_vip",param)) retorna[14] = value;
+																else if(!strcmp("per_des_cl_vipf",param)) retorna[15] = value;
 																else{
 																								printf("Error: %s Not a valid configuration setting\n", param);
 																								return 0;
