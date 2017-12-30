@@ -10,15 +10,25 @@
 
 typedef struct {
 								int minute;
-								int max_population;
-								int start_time;
-								int end_time;
-								int capacity;
-								int queue;
-								int vip;
-								int person_frequency;
-								int max_waiting_time;
+								int mr_capacidade;
+								int mr_inicio;
+								int mr_fim;
+								int	bilh_encerra;
+								int	cap_carro1;
+								int	cap_carro2;
+								int cap_f_interior;
+								int	perc_cl_normal;
+								int	mr_temp_volta;
+								int	perc_cl_vip;
+								int	perc_cl_vip_frente;
+								int	perc_avaria;
+								int	perc_des_fila_ext;
+								int	perc_des_cl_normal;
+								int	per_des_cl_vip;
+								int	per_des_cl_vipf;
+
 } s_simulator;
+/*
 typedef struct {
 								int id;
 								int vip;
@@ -30,15 +40,17 @@ typedef struct {
 } s_cliente;
 
 /********************************* Global Variables **************************************/
-
+s_simulator static simulator;
+/*
 int static sockfd, newsockfd;
 int static aquapark_open;
 int static attraction_open;
 int static clients_prio_tobogan;
 int static clients_norm_tobogan;
-s_simulator static simulator;
+
 s_cliente static cliente[267785];
 /************************** Threads, Mutex & Semaphores **********************************/
+/*
 pthread_t t_aquapark;
 //pthread_t t_swimming_pool;
 pthread_t t_toboggan;
@@ -58,6 +70,7 @@ pthread_mutex_t t_tobogan;
 
 pthread_mutex_t t_comunicate;
 /*********************************** Functions *******************************************/
+/*
 void sunbath( int id){
 								//sends the information that the client entered to the sunbath
 								pthread_mutex_lock(&t_comunicate);
@@ -187,6 +200,7 @@ void * race(){ // leves evary minute
 								   //printf("[%s] The Race tobogan is departing!\n", make_hours(simulator.minute));
 								   }
 								   printf("[%s] The Race tobogan is now closed!\n", make_hours(simulator.minute));*/
+/*
 }
 void select_where_to_go(int id){
 								// inicializes random
@@ -382,28 +396,41 @@ int * aquapark(){
 																simulator.minute++;
 								}
 
-}
+}*/
 int main(int argc, char **argv){
 								srand(time(NULL));
 
 								int *configuration_values = read_method(argc, argv[1]);
 
-								DEBUG = configuration_values[0];
+								//DEBUG = configuration_values[0];
 
-								simulator.max_population = configuration_values[1];
-								simulator.start_time = configuration_values[2]*60;
-								simulator.minute = simulator.start_time;
-								simulator.end_time = configuration_values[3]*60;
-								simulator.capacity = configuration_values[4];
-								simulator.queue = configuration_values[5];
-								simulator.vip = configuration_values[6];
-								simulator.max_waiting_time = configuration_values[7];
-								simulator.person_frequency = configuration_values[8];
-								if(DEBUG) printf("max_population:%d\tstart_time:%d\tminute:%d\nend_time:%d\tcapacity:%d\tqueue:%d\tvip:%d\n", simulator.max_population, simulator.start_time,simulator.minute,simulator.end_time,simulator.capacity,simulator.queue,simulator.vip);
+								simulator.mr_capacidade = configuration_values[0];
+								simulator.mr_inicio = configuration_values[1]*60;
+								//simulator.minute = simulator.start_time;
+								simulator.mr_fim = configuration_values[2]*60;
+								simulator.bilh_encerra = configuration_values[3]*60;
+								simulator.cap_carro1 = configuration_values[4];
+								simulator.cap_carro2 = configuration_values[5];
+								simulator.cap_f_interior = configuration_values[6];
+								simulator.perc_cl_normal = configuration_values[7];
+								simulator.mr_temp_volta = configuration_values[8];
+								simulator.perc_cl_vip = configuration_values[9];
+								simulator.perc_cl_vip_frente = configuration_values[10];
+								simulator.perc_avaria = configuration_values[11];
+								simulator.perc_des_fila_ext = configuration_values[12];
+								simulator.perc_des_cl_normal = configuration_values[13];
+								simulator.per_des_cl_vip = configuration_values[14];
+								simulator.per_des_cl_vipf = configuration_values[15];
+
+
+								/*if(DEBUG)*/
+								printf(" mr_capacidade:%d\n mr_inicio:%d\n mr_fim:%d\n bilh_encerra:%d\n cap_carro1:%d\n cap_carro2:%d\n cap_f_interior:%d\n perc_cl_normal:%d\n mr_temp_volta:%d\n perc_cl_vip:%d\n perc_cl_vip_frente:%d\n perc_avaria:%d\n perc_des_fila_ext:%d\n perc_des_cl_normal:%d\n per_des_cl_vip:%d\n per_des_cl_vipf:%d\n", simulator.mr_capacidade, simulator.mr_inicio,  simulator.mr_fim, simulator.bilh_encerra, simulator.cap_carro1, simulator.cap_carro2, simulator.cap_f_interior, simulator.perc_cl_normal, simulator.mr_temp_volta, simulator.perc_cl_vip, simulator.perc_cl_vip_frente, simulator.perc_avaria, simulator.perc_des_fila_ext, simulator.perc_des_cl_normal, simulator.per_des_cl_vip, simulator.per_des_cl_vipf);
+							}
+
 
 								/****************************** Semaphores and mutex init ********************************/
 
-								sem_init(&s_aquapark,0,simulator.capacity);
+								/*sem_init(&s_aquapark,0,simulator.capacity);
 								sem_init(&s_pool,0,15);
 								sem_init(&s_end_tobogan,0,0);
 								sem_init(&s_client_tobogan,0,0);
@@ -414,13 +441,13 @@ int main(int argc, char **argv){
 
 
 								/**************************** Initializes global variables *******************************/
-								aquapark_open = 1;
+								/*aquapark_open = 1;
 								attraction_open = 1;
 								clients_norm_tobogan = 0;
 								clients_prio_tobogan = 0;
 
 								/************************************ Socket *********************************************/
-								int clilen;
+								/*int clilen;
 								char buffer[256];
 								struct sockaddr_in serv_addr, cli_addr;
 								int n;
@@ -446,7 +473,7 @@ int main(int argc, char **argv){
 
 								/*********************************** creates threads **********************************/
 
-								if(pthread_create(&(t_aquapark), NULL,(void *)&aquapark,NULL) != 0) { //thread sunbath
+								/*if(pthread_create(&(t_aquapark), NULL,(void *)&aquapark,NULL) != 0) { //thread sunbath
 																printf("Error creating thread\n");
 																exit(1);
 								}
@@ -461,7 +488,7 @@ int main(int argc, char **argv){
 								        exit(1);
 								   }*/
 
-								int created_clients = create_client();
+								/*int created_clients = create_client();
 								//printf("created_clients : %d\n",created_clients );
 
 								//closes in the next departure
@@ -487,4 +514,6 @@ int main(int argc, char **argv){
 								} while(strcmp(buffer,"101"));
 
 								close(sockfd);
+
 }
+*/
