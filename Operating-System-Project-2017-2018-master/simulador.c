@@ -47,8 +47,9 @@ int static aquapark_open;
 int static attraction_open;
 int static clients_prio_tobogan;
 int static clients_norm_tobogan;
+s_cliente static cliente[267785];*/
+int total_clientes=0;
 
-s_cliente static cliente[267785];
 /************************** Threads, Mutex & Semaphores **********************************/
 /*
 pthread_t t_aquapark;
@@ -67,9 +68,29 @@ sem_t s_tobogan;
 sem_t s_end_tobogan;
 sem_t s_mid_tobogan;
 pthread_mutex_t t_tobogan;
-
-pthread_mutex_t t_comunicate;
+pthread_mutex_t t_comunicate;*/
+s_recinto;
+trinco_recinto;
 /*********************************** Functions *******************************************/
+
+void cliente (){ //funcao thread clientes
+
+int id_cliente;
+int a=0;
+sem_wait (&s_recinto); //semaforo recinto (0,60)
+
+	pthread_mutex_lock(&trinco_recinto);
+		id_cliente=total_clientes ++;
+		a=rand()%100+1;
+	pthread_mutex_unlock(&trinco_recinto);
+
+
+
+
+
+
+}
+
 /*
 //------------------------------SUNBATH------------------------------
 void sunbath( int id){
@@ -442,9 +463,11 @@ int main(int argc, char **argv){
 								sem_init(&s_end_tobogan,0,0);
 								sem_init(&s_client_tobogan,0,0);
 								sem_init(&s_client_tobogan_prio,0,0);
-								sem_init(&s_client_tobogan_no_prio,0,0);
+								sem_init(&s_client_tobogan_no_prio,0,0);*/
+								sem_init(&s_recinto,0,simulator.mr_capacidade);
 
-								pthread_mutex_init(&t_comunicate,NULL);
+							//	pthread_mutex_init(&t_comunicate,NULL);
+								pthread_mutex_init(&trinco_recinto,NULL);
 
 
 								/**************************** Initializes global variables *******************************/
