@@ -48,7 +48,7 @@ int static attraction_open;
 int static clients_prio_tobogan;
 int static clients_norm_tobogan;
 s_cliente static cliente[267785];*/
-int total_clientes=0;
+int total_clientes=1;
 int vip_frente=0;
 int vip=0;
 int normal=0;
@@ -81,7 +81,7 @@ pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal;
 
 void *f_cliente (){ //funcao thread clientes
 
-int id_cliente;
+int id_cliente=0;
 int random=0;
 int tipo; //0-> Vip_Frente
 					//1-> VIP
@@ -90,7 +90,7 @@ sem_wait (&s_recinto); //semaforo recinto (0,60)
 
 	pthread_mutex_lock(&trinco_recinto);
 		id_cliente=total_clientes ++;
-		random=rand()%100+1;
+		random=rand()%100+1; 
 	pthread_mutex_unlock(&trinco_recinto);
 
 	if (random<=simulator.perc_cl_vip_frente){   //Cliente Vip_Frente;
@@ -107,6 +107,7 @@ switch(tipo){
 pthread_mutex_lock(&trinco_vip_frente);
 			vip_frente++;
 			send_message(newsockfd,simulator.minute,13,id_cliente);
+			printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
 pthread_mutex_unlock(&trinco_vip_frente);
 
 sem_wait (&s_vip_frente);
@@ -120,11 +121,13 @@ pthread_mutex_unlock(&trinco_vip_frente);
 pthread_mutex_lock(&trinco_vip);
 			vip++;
 		  send_message(newsockfd,simulator.minute,12,id_cliente);
+			printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
 pthread_mutex_unlock(&trinco_vip);
 
 sem_wait (&s_vip);
 pthread_mutex_lock(&trinco_vip);
 			send_message(newsockfd,simulator.minute,15,id_cliente);
+
 			vip--;
 pthread_mutex_unlock(&trinco_vip);
 			break;
@@ -132,6 +135,7 @@ pthread_mutex_unlock(&trinco_vip);
 	case 2:
 pthread_mutex_lock(&trinco_normal);
 			normal++;
+			printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
 			send_message(newsockfd,simulator.minute,11,id_cliente);
 pthread_mutex_unlock(&trinco_normal);
 
@@ -232,15 +236,17 @@ int main(int argc, char **argv){
 																n = read(newsockfd,buffer,255);
 																if(n<0) printf("ERROR reading from socket\n");
 								} while(strcmp(buffer,"100"));
-
+								system("clear");
 								printf("A simulação começou\n");
 
 								/*********************************** creates threads **********************************/
 
-								for(int i=0;i<10;i++){
+								for(int i=0;i<90;i++){
 								if(pthread_create((&t_cliente), NULL,(void *)&f_cliente,NULL) != 0) { //thread sunbath
 																printf("Error creating thread\n");
-																exit(1);}}
+																exit(1);}
+																usleep(300000);
+															}
 
 
 
