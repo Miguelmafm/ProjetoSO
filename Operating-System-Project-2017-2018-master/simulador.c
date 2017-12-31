@@ -71,6 +71,7 @@ pthread_mutex_t t_tobogan;
 pthread_mutex_t t_comunicate;
 /*********************************** Functions *******************************************/
 /*
+//------------------------------SUNBATH------------------------------
 void sunbath( int id){
 								//sends the information that the client entered to the sunbath
 								pthread_mutex_lock(&t_comunicate);
@@ -94,102 +95,109 @@ void sunbath( int id){
 								usleep(150000);
 								pthread_mutex_unlock(&t_comunicate);
 }
+
+
+
+
+//------------------------------SWIMMING POLL------------------------------
 void swimming_pool( int id){
-								//sends the information that the client is on the line to the swiming pool
-								pthread_mutex_lock(&t_comunicate);
-								printf("[%s] The client %d arrived to the swiming pool.\n",make_hours(simulator.minute),id);
-								send_message(newsockfd,simulator.minute,2,id);
+//sends the information that the client is on the line to the swiming pool
+pthread_mutex_lock(&t_comunicate);
+		printf("[%s] The client %d arrived to the swiming pool.\n",make_hours(simulator.minute),id);
+		send_message(newsockfd,simulator.minute,2,id);
+		usleep(150000);
+pthread_mutex_unlock(&t_comunicate);
+
+//waits in the line
+		cliente[id].arrival_time = simulator.minute;
+sem_wait(&s_pool);
+		if (simulator.max_waiting_time > (simulator.minute - cliente[id].arrival_time) && simulator.minute<=(simulator.end_time-30)) { // give up because of time
+				//sends the information that the client entered to the swiming pool
+		pthread_mutex_lock(&t_comunicate);
+				printf("[%s] The client %d went to the swiming pool.\n",make_hours(simulator.minute),id);
+				send_message(newsockfd,simulator.minute,12,id);
+				usleep(150000);
+		pthread_mutex_unlock(&t_comunicate);
+				sleep(30);
+		//sends the information that the client exited to the swiming pool
+			pthread_mutex_lock(&t_comunicate);
+					printf("[%s] The client %d went out of the swiming pool.\n",make_hours(simulator.minute),id);
+					send_message(newsockfd,simulator.minute,22,id);
+					usleep(150000);
+			pthread_mutex_unlock(&t_comunicate);
+			}else{
+					pthread_mutex_lock(&t_comunicate);
+								printf("[%s] The client %d  give up the swiming pool.\n",make_hours(simulator.minute),id);
+								send_message(newsockfd,simulator.minute,32,id);
 								usleep(150000);
-								pthread_mutex_unlock(&t_comunicate);
+					pthread_mutex_unlock(&t_comunicate);
+				}
 
-								//waits in the line
-								cliente[id].arrival_time = simulator.minute;
-								sem_wait(&s_pool);
-								if (simulator.max_waiting_time > (simulator.minute - cliente[id].arrival_time) && simulator.minute<=(simulator.end_time-30)) { // give up because of time
-																//sends the information that the client entered to the swiming pool
-																pthread_mutex_lock(&t_comunicate);
-																printf("[%s] The client %d went to the swiming pool.\n",make_hours(simulator.minute),id);
-																send_message(newsockfd,simulator.minute,12,id);
-																usleep(150000);
-																pthread_mutex_unlock(&t_comunicate);
-
-																sleep(30);
-																//sends the information that the client exited to the swiming pool
-																pthread_mutex_lock(&t_comunicate);
-																printf("[%s] The client %d went out of the swiming pool.\n",make_hours(simulator.minute),id);
-																send_message(newsockfd,simulator.minute,22,id);
-																usleep(150000);
-																pthread_mutex_unlock(&t_comunicate);
-								}else{
-																pthread_mutex_lock(&t_comunicate);
-																printf("[%s] The client %d  give up the swiming pool.\n",make_hours(simulator.minute),id);
-																send_message(newsockfd,simulator.minute,32,id);
-																usleep(150000);
-																pthread_mutex_unlock(&t_comunicate);
-								}
-
-								sem_post(&s_pool);
+sem_post(&s_pool);
 }
+
+
+//------------------------------TOBOGGAN------------------------------
 void * toboggan(){              // leaves when 2 clients are ready for departure
-								int i;
+	int i;
 
-								printf("[%s] The tobogan is now open!\n", make_hours(simulator.minute));
-								while(attraction_open) {
+	printf("[%s] The tobogan is now open!\n", make_hours(simulator.minute));
+	while(attraction_open) {
+			printf("[%s] The tobogan is ready to get more costumers!\n", make_hours(simulator.minute));
+			int number_inside = 0;
 
-																printf("[%s] The tobogan is ready to get more costumers!\n", make_hours(simulator.minute));
-																int number_inside = 0;
+			while(number_inside<2) { //fills tobogan
+					sem_wait(&s_client_tobogan);
+					umber_inside++;
+					}
+			if (simulator.minute < simulator.end_time) { // atractions closed)
+	pthread_mutex_lock(&t_tobogan);
+						//printf("clients_prio_tobogan %d\n", clients_prio_tobogan);
+			for (i = 0; i < number_inside; ++i) { // tells clients to start
+				if (clients_prio_tobogan>=1) {
+					sem_post(&s_client_tobogan_prio);
+					clients_prio_tobogan--;
+				}else{
+					sem_post(&s_client_tobogan_no_prio);
+					clients_norm_tobogan--;
+				}}
+	pthread_mutex_unlock(&t_tobogan);
 
-																while(number_inside<2) { //fills tobogan
-																								sem_wait(&s_client_tobogan);
-																								number_inside++;
-																}
-																if (simulator.minute < simulator.end_time) { // atractions closed)
-																								pthread_mutex_lock(&t_tobogan);
-																								//printf("clients_prio_tobogan %d\n", clients_prio_tobogan);
-																								for (i = 0; i < number_inside; ++i) { // tells clients to start
-																																if (clients_prio_tobogan>=1) {
-																																								sem_post(&s_client_tobogan_prio);
-																																								clients_prio_tobogan--;
-																																}else{
-																																								sem_post(&s_client_tobogan_no_prio);
-																																								clients_norm_tobogan--;
-																																}
-																								}
-																								pthread_mutex_unlock(&t_tobogan);
+	pthread_mutex_lock(&t_comunicate);
+			printf("[%s] The tobogan started.\n",make_hours(simulator.minute));
+			send_message(newsockfd,simulator.minute,43,1);
+			usleep(150000);
+	pthread_mutex_unlock(&t_comunicate);
+			sleep(4); // duration of the tobogan
 
-																								pthread_mutex_lock(&t_comunicate);
-																								printf("[%s] The tobogan started.\n",make_hours(simulator.minute));
-																								send_message(newsockfd,simulator.minute,43,1);
-																								usleep(150000);
-																								pthread_mutex_unlock(&t_comunicate);
+				for (i = 0; i < number_inside; ++i) {
+					sem_post(&s_end_tobogan); //tells clients that where inside that it ended
+				}
 
-																								sleep(4); // duration of the tobogan
+	pthread_mutex_lock(&t_comunicate);
+				printf("[%s] The tobogan ended.\n",make_hours(simulator.minute));
+				send_message(newsockfd,simulator.minute,53,1);
+				usleep(150000);
+	pthread_mutex_unlock(&t_comunicate);
+				}else{
+					for (i = 0; i <= number_inside; ++i) { // frees clients becous atraction has ended
+						sem_post(&s_end_tobogan);
+					}}}
 
-																								for (i = 0; i < number_inside; ++i) {
-																																sem_post(&s_end_tobogan); //tells clients that where inside that it ended
-																								}
+	pthread_mutex_lock(&t_tobogan);
+				for (i = 0; i <= clients_prio_tobogan; ++i) { // frees clients becous atraction has ended
+						sem_post(&s_client_tobogan_prio);
+				}
 
-																								pthread_mutex_lock(&t_comunicate);
-																								printf("[%s] The tobogan ended.\n",make_hours(simulator.minute));
-																								send_message(newsockfd,simulator.minute,53,1);
-																								usleep(150000);
-																								pthread_mutex_unlock(&t_comunicate);
-																}else{
-																								for (i = 0; i <= number_inside; ++i) { // frees clients becous atraction has ended
-																																sem_post(&s_end_tobogan);
-																								}
-																}
-								}
-								pthread_mutex_lock(&t_tobogan);
-								for (i = 0; i <= clients_prio_tobogan; ++i) { // frees clients becous atraction has ended
-																sem_post(&s_client_tobogan_prio);
-								}
-								for (i = 0; i <= clients_norm_tobogan; ++i) { // frees clients becous atraction has ended
-																sem_post(&s_client_tobogan_no_prio);
-								}
-								pthread_mutex_unlock(&t_tobogan);
-								printf("[%s] The tobogan is now closed!\n", make_hours(simulator.minute));
+				for (i = 0; i <= clients_norm_tobogan; ++i) { // frees clients becous atraction has ended
+						sem_post(&s_client_tobogan_no_prio);
+				}
+	pthread_mutex_unlock(&t_tobogan);
+				printf("[%s] The tobogan is now closed!\n", make_hours(simulator.minute));
 }
+
+
+//------------------------------RACE------------------------------
 void * race(){ // leves evary minute
 								/*printf("[%s] The Race tobogan is now open!\n", make_hours(simulator.minute));
 
@@ -202,196 +210,195 @@ void * race(){ // leves evary minute
 								   printf("[%s] The Race tobogan is now closed!\n", make_hours(simulator.minute));*/
 /*
 }
+
+
+//------------------------------WHERE-TO-GO------------------------------
 void select_where_to_go(int id){
-								// inicializes random
-								time_t t;
-								srand((unsigned) time(&t));
-								//gets a random time to go if its needed
-								cliente[id].duration = (rand() % 8) + 2; // tempo de duração dentro das atividades
+// inicializes random
+	time_t t;
+	srand((unsigned) time(&t));
+//gets a random time to go if its needed
+	cliente[id].duration = (rand() % 8) + 2; // tempo de duração dentro das atividades
+//selects where to go
+switch(cliente[id].current_place) {
+	case 0:
+	case 1:
+				sunbath(id);
+				break;
+	case 2:
+	case 3:
+				cliente[id].arrival_time = simulator.minute;
+pthread_mutex_lock(&t_comunicate);
+				printf("[%s] The client %d went to the tobogan. vip :%d \n",make_hours(simulator.minute),id,cliente[id].vip);
+				send_message(newsockfd,simulator.minute,3,id);
+				usleep(150000);
+pthread_mutex_unlock(&t_comunicate);
 
-								//selects where to go
-								switch(cliente[id].current_place) {
-								case 0:
-								case 1:
-																sunbath(id);
-																break;
-								case 2:
-								case 3:
-																cliente[id].arrival_time = simulator.minute;
-																pthread_mutex_lock(&t_comunicate);
-																printf("[%s] The client %d went to the tobogan. vip :%d \n",make_hours(simulator.minute),id,cliente[id].vip);
-																send_message(newsockfd,simulator.minute,3,id);
-																usleep(150000);
-																pthread_mutex_unlock(&t_comunicate);
+pthread_mutex_lock(&t_tobogan);
+				if (cliente[id].vip) {
+						clients_prio_tobogan++;
+				}else{
+						clients_norm_tobogan++;
+				}
 
-																pthread_mutex_lock(&t_tobogan);
-																if (cliente[id].vip) {
-																								clients_prio_tobogan++;
-																}else{
-																								clients_norm_tobogan++;
-																}
+		sem_post(&s_client_tobogan);
 
-																sem_post(&s_client_tobogan);
+		if (cliente[id].vip) {
+				pthread_mutex_unlock(&t_tobogan);
+				sem_wait(&s_client_tobogan_prio);
+			}else{
+				pthread_mutex_unlock(&t_tobogan);
+				sem_wait(&s_client_tobogan_no_prio);
+			}
 
-																if (cliente[id].vip) {
-																								pthread_mutex_unlock(&t_tobogan);
-																								sem_wait(&s_client_tobogan_prio);
-																}
-																else{
-																								pthread_mutex_unlock(&t_tobogan);
-																								sem_wait(&s_client_tobogan_no_prio);
-																}
-																if (simulator.max_waiting_time > (simulator.minute - cliente[id].arrival_time) && simulator.minute<=(simulator.end_time-30)) { // give up because of time
+		if (simulator.max_waiting_time > (simulator.minute - cliente[id].arrival_time) && simulator.minute<=(simulator.end_time-30)) { // give up because of time
+			pthread_mutex_lock(&t_comunicate);
+						printf("[%s] The client %d is riding on the tobogan.\n",make_hours(simulator.minute),id);
+						send_message(newsockfd,simulator.minute,13,id);
+						usleep(150000);
+			pthread_mutex_unlock(&t_comunicate);
 
-																								pthread_mutex_lock(&t_comunicate);
-																								printf("[%s] The client %d is riding on the tobogan.\n",make_hours(simulator.minute),id);
-																								send_message(newsockfd,simulator.minute,13,id);
-																								usleep(150000);
-																								pthread_mutex_unlock(&t_comunicate);
+				sem_wait(&s_end_tobogan);
+				pthread_mutex_lock(&t_comunicate);
+						printf("[%s] The client %d  leaves the tobogan.\n",make_hours(simulator.minute),id);
+						send_message(newsockfd,simulator.minute,23,id);
+						usleep(150000);
+				pthread_mutex_unlock(&t_comunicate);
+			}else{
+				pthread_mutex_lock(&t_comunicate);
+						printf("[%s] The client %d  give up the tobogan.\n",make_hours(simulator.minute),id);
+						send_message(newsockfd,simulator.minute,33,id);
+						usleep(150000);
+				pthread_mutex_unlock(&t_comunicate);}
+						break;
 
-																								sem_wait(&s_end_tobogan);
-
-																								pthread_mutex_lock(&t_comunicate);
-																								printf("[%s] The client %d  leaves the tobogan.\n",make_hours(simulator.minute),id);
-																								send_message(newsockfd,simulator.minute,23,id);
-																								usleep(150000);
-																								pthread_mutex_unlock(&t_comunicate);
-																}else{
-																								pthread_mutex_lock(&t_comunicate);
-																								printf("[%s] The client %d  give up the tobogan.\n",make_hours(simulator.minute),id);
-																								send_message(newsockfd,simulator.minute,33,id);
-																								usleep(150000);
-																								pthread_mutex_unlock(&t_comunicate);
-																}
-																break;
-								case 4:;
-								case 5:
-																//printf("[%s] The client %d went to the race tobogan.\n",make_hours(simulator.minute),id);
-																//sleep(2);
-																break;
-								case 6:
-								case 7:
-																swimming_pool(id);
-																break;
-
-								case 8:
-																break;
-								default: printf("Error selecting whero to go.\n"); break;
+			case 4:
+			case 5:
+			//printf("[%s] The client %d went to the race tobogan.\n",make_hours(simulator.minute),id);
+			//sleep(2);
+					break;
+			case 6:
+			case 7:
+					swimming_pool(id);
+				break;
+			case 8:
+				break;
+			default: printf("Error selecting whero to go.\n"); break;
 								}
 
 }
 
+
+//------------------------------HANDLE_CLIENT------------------------------
 int * handle_client(int id){
+// inicializes random
+	time_t t;
+	srand((unsigned) time(&t));
+// function that gets a diferant than the previous number
+	int getRandom(int max, int min){
+//srand((unsigned) time(&t));
+	int myRandom = (rand() % max) + min;
+//printf("random\n" );
+	if (cliente[id].current_place != myRandom) {
+		return myRandom;
+	}else{
+			getRandom(max,min);
+	}}
+pthread_mutex_lock(&t_comunicate);
+		printf("[%s] ⚫ The client %d arrived to the Park entrance", make_hours(simulator.minute),id);
+		send_message(newsockfd,simulator.minute,1,id);
+		usleep(150000);
+pthread_mutex_unlock(&t_comunicate);
 
-								// inicializes random
-								time_t t;
-								srand((unsigned) time(&t));
-								// function that gets a diferant than the previous number
-								int getRandom(int max, int min){
-																//srand((unsigned) time(&t));
-																int myRandom = (rand() % max) + min;
-																//printf("random\n" );
-																if (cliente[id].current_place != myRandom) {
-																								return myRandom;
-																}
-																else{
-																								getRandom(max,min);
-																}
+		if((rand() % 100)<simulator.vip) {
+				cliente[id].vip = 1;
+				printf(" and it is an VIP\n");
+		}else {
+				cliente[id].vip = 0;
+				printf(" and it's not a VIP\n");
+		}
+
+		if (simulator.minute < simulator.end_time - 30) { // atractions closed
+		// check ocupation
+		cliente[id].arrival_time = simulator.minute;
+		sem_wait(&s_aquapark);
+				if (simulator.max_waiting_time > (simulator.minute - cliente[id].arrival_time)) { // give up because of time
+	pthread_mutex_lock(&t_comunicate);
+						send_message(newsockfd,simulator.minute,11,id);
+						printf("[%s] ⚫ The client %d entered the Park\n", make_hours(simulator.minute),id);
+						usleep(150000);
+	pthread_mutex_unlock(&t_comunicate);
+			// enters aquapark
+			cliente[id].current_place = 0; // sunbath
+
+						for (; simulator.minute < simulator.end_time - 30; ) {
+							if (cliente[id].current_place < 8) {
+									select_where_to_go(id);
+									cliente[id].current_place = getRandom(9,1);
+							}else{
+							//printf("[%s] The client %d wants to leave.\n",make_hours(simulator.minute),id);
+							break;}}
+				}else{
+	pthread_mutex_lock(&t_comunicate);
+			printf("[%s] The client %d  give up the Aquapark.\n",make_hours(simulator.minute),id);
+			send_message(newsockfd,simulator.minute,31,id);
+			usleep(150000);
+	pthread_mutex_unlock(&t_comunicate);
+				}
+			sem_post(&s_aquapark);
+  pthread_mutex_lock(&t_comunicate);
+			printf("[%s] The client %d went out of the Aquapark.\n",make_hours(simulator.minute),id);
+			send_message(newsockfd,simulator.minute,21,id);
+				usleep(150000);
+	pthread_mutex_unlock(&t_comunicate);
+				}else{
+	pthread_mutex_lock(&t_comunicate);
+				printf("[%s] The client %d went home the Aquapark was closed.\n",make_hours(simulator.minute),id);
+				send_message(newsockfd,simulator.minute,31,id);
+				usleep(150000);
+	pthread_mutex_unlock(&t_comunicate);
 								}
-
-								pthread_mutex_lock(&t_comunicate);
-								printf("[%s] ⚫ The client %d arrived to the Park entrance", make_hours(simulator.minute),id);
-								send_message(newsockfd,simulator.minute,1,id);
-								usleep(150000);
-								pthread_mutex_unlock(&t_comunicate);
-
-
-								if((rand() % 100)<simulator.vip) {
-																cliente[id].vip = 1;
-																printf(" and it is an VIP\n");
-								}else {
-																cliente[id].vip = 0;
-																printf(" and it's not a VIP\n");
-								}
-								if (simulator.minute < simulator.end_time - 30) { // atractions closed
-																// check ocupation
-																cliente[id].arrival_time = simulator.minute;
-																sem_wait(&s_aquapark);
-																if (simulator.max_waiting_time > (simulator.minute - cliente[id].arrival_time)) { // give up because of time
-
-																								pthread_mutex_lock(&t_comunicate);
-																								send_message(newsockfd,simulator.minute,11,id);
-																								printf("[%s] ⚫ The client %d entered the Park\n", make_hours(simulator.minute),id);
-																								usleep(150000);
-																								pthread_mutex_unlock(&t_comunicate);
-																								// enters aquapark
-																								cliente[id].current_place = 0; // sunbath
-
-
-
-																								for (; simulator.minute < simulator.end_time - 30; ) {
-																																if (cliente[id].current_place < 8) {
-																																								select_where_to_go(id);
-																																								cliente[id].current_place = getRandom(9,1);
-																																}else{
-																																								//printf("[%s] The client %d wants to leave.\n",make_hours(simulator.minute),id);
-																																								break;
-																																}
-
-																								}
-																}else{
-																								pthread_mutex_lock(&t_comunicate);
-																								printf("[%s] The client %d  give up the Aquapark.\n",make_hours(simulator.minute),id);
-																								send_message(newsockfd,simulator.minute,31,id);
-																								usleep(150000);
-																								pthread_mutex_unlock(&t_comunicate);
-																}
-																sem_post(&s_aquapark);
-
-																pthread_mutex_lock(&t_comunicate);
-																printf("[%s] The client %d went out of the Aquapark.\n",make_hours(simulator.minute),id);
-																send_message(newsockfd,simulator.minute,21,id);
-																usleep(150000);
-																pthread_mutex_unlock(&t_comunicate);
-								}else{
-																pthread_mutex_lock(&t_comunicate);
-																printf("[%s] The client %d went home the Aquapark was closed.\n",make_hours(simulator.minute),id);
-																send_message(newsockfd,simulator.minute,31,id);
-																usleep(150000);
-																pthread_mutex_unlock(&t_comunicate);
-								}
-								return 0;
+	return 0;
 }
+
+
+
+//------------------------------CREATE_CLIENT------------------------------
 int create_client(){
-								int i,number_clients=0;
-								int finaltimeforarrival = simulator.end_time-30;
-								time_t t;
-								srand((unsigned) time(&t));
+int i,number_clients=0;
+int finaltimeforarrival = simulator.end_time-30;
+time_t t;
+srand((unsigned) time(&t));
 
-								for(i=1; i<=simulator.max_population && simulator.minute < finaltimeforarrival; i++) {
-
-																if(i<simulator.max_population) {
-																								int random = (rand()%100);
-																								if(random>simulator.person_frequency) i--;
-																								else{
-																																if(pthread_create(&(t_cliente[i]), NULL,(void *)&handle_client,i) != 0) {
-																																								printf("Error creating thread\n");
-																																								exit(1);
-																																}
-																																number_clients++;
-																								}
-																}else printf("[%s] There is no more people living in Madeira\n", make_hours(simulator.minute));
-																sleep(1);
+	for(i=1; i<=simulator.max_population && simulator.minute < finaltimeforarrival; i++) {
+			if(i<simulator.max_population) {
+					int random = (rand()%100);
+							if(random>simulator.person_frequency){ i--;
+							}else{
+									if(pthread_create(&(t_cliente[i]), NULL,(void *)&handle_client,i) != 0) {
+											printf("Error creating thread\n");
+											exit(1);
+									}
+								attraction_open=0;
+							}
+					usleep(400000);
+					simulator.minute++;
+					number_clients++;
+			}else printf("[%s] There is no more people living in Madeira\n", make_hours(simulator.minute));
+				sleep(1);
 								}
-								return number_clients;
+					return number_clients;
 }
+
+
+//------------------------------aquapark------------------------------
 int * aquapark(){
 
 								while(aquapark_open) {
-																if(((simulator.end_time)-15) == simulator.minute) {
-																								printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
-																								attraction_open=0;
-																}
+										if(((simulator.end_time)-15) == simulator.minute) {
+									r	intf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
+										attraction_open=0;
+													}
 																usleep(400000);
 																simulator.minute++;
 								}
@@ -403,11 +410,11 @@ int main(int argc, char **argv){
 								int *configuration_values = read_method(argc, argv[1]);
 
 								//DEBUG = configuration_values[0];
+								simulator.mr_fim = configuration_values[2]*60;
 
 								simulator.mr_capacidade = configuration_values[0];
 								simulator.mr_inicio = configuration_values[1]*60;
 								//simulator.minute = simulator.start_time;
-								simulator.mr_fim = configuration_values[2]*60;
 								simulator.bilh_encerra = configuration_values[3]*60;
 								simulator.cap_carro1 = configuration_values[4];
 								simulator.cap_carro2 = configuration_values[5];
