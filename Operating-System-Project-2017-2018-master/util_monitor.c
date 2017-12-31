@@ -338,27 +338,27 @@ void save_info(int hour, int state, int client_id){
 																entry_activity(hour, client_id, &*inicio_aqua);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 21:
+								case 12:
 																pthread_mutex_lock(&t_teste);
 																out_activity(hour, client_id, &*inicio_aqua);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 31:
+								case 13:
 																pthread_mutex_lock(&t_teste);
 																drop_activity(hour, client_id, &*inicio_aqua);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 2:
+								case 21:
 																pthread_mutex_lock(&t_teste);
 																insert_struct(&str_swimming_pool, hour, client_id, &*inicio_swim,2);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 12:
+								case 22:
 																pthread_mutex_lock(&t_teste);
 																entry_activity(hour, client_id, &*inicio_swim);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 22:
+								case 31:
 																pthread_mutex_lock(&t_teste);
 																out_activity(hour, client_id, &*inicio_swim);
 																pthread_mutex_unlock(&t_teste);
@@ -368,79 +368,87 @@ void save_info(int hour, int state, int client_id){
 																drop_activity(hour, client_id, &*inicio_swim);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 3:
+								case 41:
 																pthread_mutex_lock(&t_teste);
 																insert_struct(&str_tobogan, hour, client_id, &*inicio_tobo,3);
 																counter.tobogan++;
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 13:
+								case 42:
 																pthread_mutex_lock(&t_teste);
 																entry_activity(hour, client_id, &*inicio_tobo);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 23:
+								case 51:
 																pthread_mutex_lock(&t_teste);
 																out_activity(hour, client_id, &*inicio_tobo);
 																counter.tobogan--;
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 33:
+								case 52:
 																pthread_mutex_lock(&t_teste);
 																drop_activity(hour, client_id, &*inicio_tobo);
 																counter.tobogan--;
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 4:
+								case 53:
 																pthread_mutex_lock(&t_teste);
 																insert_struct(&str_race, hour, client_id, &*inicio_race,4);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 14:
+								case 54:
 																pthread_mutex_lock(&t_teste);
 																entry_activity(hour, client_id, &*inicio_race);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 24:
+								case 61:
 																pthread_mutex_lock(&t_teste);
 																out_activity(hour, client_id, &*inicio_race);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 34:
+								case 62:
 																pthread_mutex_lock(&t_teste);
 																drop_activity(hour, client_id, &*inicio_race);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 5:
+								case 63:
 																pthread_mutex_lock(&t_teste);
 																insert_struct(&str_sunbath, hour, client_id, &*inicio_sunb,5);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 15:
+								case 64:
 																pthread_mutex_lock(&t_teste);
 																entry_activity(hour, client_id, &*inicio_sunb);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 25:
+								case 71:
 																pthread_mutex_lock(&t_teste);
 																out_activity(hour, client_id, &*inicio_sunb);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 35:
+								case 81:
 																pthread_mutex_lock(&t_teste);
 																drop_activity(hour, client_id, &*inicio_sunb);
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 43:
+								case 82:
 																pthread_mutex_lock(&t_teste);
 																counter.tobo = 1;
 																pthread_mutex_unlock(&t_teste);
 																break;
-								case 53:
+								case 83:
 																pthread_mutex_lock(&t_teste);
 																counter.tobo = 0;
 																pthread_mutex_unlock(&t_teste);
 																break;
+
+							 case 100:
+															  pthread_mutex_lock(&t_teste);
+																counter.tobo = 0;
+																pthread_mutex_unlock(&t_teste);
+																break;
+
+
 								case 101:
 																atraction = 0;
 								default:
@@ -457,35 +465,40 @@ int write_log(int hour, int state, int client_id){
 								}
 
 								switch(state) {
-								case 1: fprintf(file_log,"[%s] ❤ Client %d arrived to AquaPark.\n", make_hours(hour), client_id); break;
-								case 2: fprintf(file_log,"[%s] ➤ Client %d arrived to Swimming Pool.\n", make_hours(hour), client_id); break;
-								case 3: fprintf(file_log,"[%s] ➤ Client %d arrived to Tobogan.\n", make_hours(hour), client_id); break;
-								case 4: fprintf(file_log,"[%s] ➤ Client %d arrived to Race.\n", make_hours(hour), client_id); break;
-								case 5: fprintf(file_log,"[%s] ➤ Client %d arrived to Sunbath.\n", make_hours(hour), client_id); break;
-								case 11: fprintf(file_log,"[%s] ☀ Client %d entered to AquaPark.\n", make_hours(hour), client_id); break;
-								case 12: fprintf(file_log,"[%s] ☀ Client %d entered to Swimming Pool.\n", make_hours(hour), client_id); break;
-								case 13: fprintf(file_log,"[%s] ☀ Client %d entered to Toboggan.\n", make_hours(hour), client_id); break;
-								case 14: fprintf(file_log,"[%s] ☀ Client %d entered to Race.\n", make_hours(hour), client_id); break;
-								case 15: fprintf(file_log,"[%s] ☀ Client %d entered to Sunbath\n", make_hours(hour), client_id); break;
-								case 21: fprintf(file_log,"[%s] ★ Client %d went out of AquaPark.\n", make_hours(hour), client_id); break;
-								case 22: fprintf(file_log,"[%s] ⚫ Client %d went out of Swimming Pool.\n", make_hours(hour), client_id); break;
-								case 23: fprintf(file_log,"[%s] ⚫ Client %d went out of Toboggan.\n", make_hours(hour), client_id); break;
-								case 24: fprintf(file_log,"[%s] ⚫ Client %d went out of Race.\n", make_hours(hour), client_id); break;
-								case 25: fprintf(file_log,"[%s] ⚫ Client %d went out of Sunbath\n", make_hours(hour), client_id); break;
-								case 31: fprintf(file_log,"[%s] ❌ Client %d gave up on AquaPark, was waiting for too long\n", make_hours(hour), client_id); break;
-								case 32: fprintf(file_log,"[%s] ❌ Client %d gave up on Swimming Pool, was waiting for too long\n", make_hours(hour), client_id); break;
-								case 33: fprintf(file_log,"[%s] ❌ Client %d gave up on Tobogan, was waiting for too long\n", make_hours(hour), client_id); break;
-								case 34: fprintf(file_log,"[%s] ❌ Client %d gave up on Race, was waiting for too long\n", make_hours(hour), client_id); break;
-								case 35: fprintf(file_log,"[%s] ❌ Client %d gave up on Sunbath, was waiting for too long\n", make_hours(hour), client_id); break;
+								case 1: fprintf(file_log,"[%s] ❤ Cliente %d chegou à fila exterior da Montanha Russa.\n", make_hours(hour), client_id); break;
 
-								case 43: fprintf(file_log,"[%s] ➤ Toboggan wooooooo.\n", make_hours(hour)); break;
-								case 44: fprintf(file_log,"[%s] ➤ Race wooooooo.\n", make_hours(hour)); break;
-								case 53: fprintf(file_log,"[%s] ➤ Toboggan trip is over.\n", make_hours(hour)); break;
-								case 54: fprintf(file_log,"[%s] ➤ Race trip is over.\n", make_hours(hour)); break;
+								case 11: fprintf(file_log,"[%s] ⚫ Cliente Normal %d entrou na fila interior da Montanha Russa.\n", make_hours(hour), client_id); break;
+								case 12: fprintf(file_log,"[%s] ⚫ Cliente Vip %d entrou na fila interior da Montanha Russa.\n", make_hours(hour), client_id); break;
+								case 13: fprintf(file_log,"[%s] ⚫ Cliente Vip_frente %d entrou na fila interior da Montanha Russa.\n", make_hours(hour), client_id); break;
 
-								case 100: fprintf(file_log,"[%s] ⛬ Simulation started.\n", make_hours(hour)); break;
-								case 101: fprintf(file_log,"[%s] ⛬ Simulation is over.\n", make_hours(hour)); break;
-								default: fprintf(file_log,"[%s] Error: didnt get what you mean", make_hours(hour)); break;
+								case 21: fprintf(file_log,"[%s] ❌ Carro da frente está cheio.\n", make_hours(hour)); break;
+								case 22: fprintf(file_log,"[%s] ❌ Montanha Russa esta cheia.\n", make_hours(hour)); break;
+
+								case 31: fprintf(file_log,"[%s] ⚫ Cliente %d saiu da Montanha Russa.\n", make_hours(hour), client_id); break;
+								case 32: fprintf(file_log,"[%s] ⚫ Cliente %d saiu do recinto da Montanha Russa.\n", make_hours(hour), client_id); break;
+
+								case 41: fprintf(file_log,"[%s] * Colaborador esta a verificar os cintos de seguranca.\n", make_hours(hour)); break;
+								case 42: fprintf(file_log,"[%s] * Cintos de seguranca verificados com sucesso.\n", make_hours(hour)); break;
+
+								case 51: fprintf(file_log,"[%s] ⚫ Cliente %d na fila exterior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
+								case 52: fprintf(file_log,"[%s] ⚫ Cliente normal %d na fila interior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
+								case 53: fprintf(file_log,"[%s] ⚫ Cliente vip %d na fila interior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
+								case 54: fprintf(file_log,"[%s] ⚫ Cliente vip_frente %d na fila interior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
+
+								case 61: fprintf(file_log,"[%s] ❌ A montanha russa iniciou a viagem.\n", make_hours(hour)); break;
+								case 62: fprintf(file_log,"[%s] ❌ A montanha russa parou devido a uma avaria.\n", make_hours(hour)); break;
+								case 63: fprintf(file_log,"[%s] ❌ A montanha russa retomou após avaria.\n", make_hours(hour)); break;
+								case 64: fprintf(file_log,"[%s] ❌ A montanha russa chegou ao fim da viagem.\n", make_hours(hour)); break;
+
+								case 71: fprintf(file_log,"[%s] ➤ Ocorreu uma avaria na Montanha Russa.\n", make_hours(hour)); break;
+
+								case 81: fprintf(file_log,"[%s] ➤ O mecanico foi avisado e desloca-se para a Montanha Russa.\n", make_hours(hour)); break;
+								case 82: fprintf(file_log,"[%s] ➤ O mecanico deu inicio a reparacao da Montanha Russa.\n", make_hours(hour)); break;
+								case 83: fprintf(file_log,"[%s] ➤ O mecanico concluiu com sucesso a reparacao.\n", make_hours(hour)); break;
+
+								case 100: fprintf(file_log,"[%s] ⛬ Simulacao iniciada.\n", make_hours(hour)); break;
+								case 101: fprintf(file_log,"[%s] ⛬ Simulacao terminada.\n", make_hours(hour)); break;
+								default: fprintf(file_log,"[%s] Erro: numero enviado do simulador esta errado", make_hours(hour)); break;
 								}
 								fclose(file_log);
 								return 1;
