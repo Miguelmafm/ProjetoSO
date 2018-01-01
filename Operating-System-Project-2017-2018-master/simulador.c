@@ -41,15 +41,20 @@ typedef struct {
 
 /********************************* Global Variables **************************************/
 s_simulator static simulator;
-/*
+
 int static sockfd, newsockfd;
-int static aquapark_open;
+/*int static aquapark_open;
 int static attraction_open;
 int static clients_prio_tobogan;
 int static clients_norm_tobogan;
+s_cliente static cliente[267785];*/
+int total_clientes=1;
+int vip_frente=0;
+int vip=0;
+int normal=0;
 
-s_cliente static cliente[267785];
 /************************** Threads, Mutex & Semaphores **********************************/
+pthread_t t_cliente;
 /*
 pthread_t t_aquapark;
 //pthread_t t_swimming_pool;
@@ -67,9 +72,229 @@ sem_t s_tobogan;
 sem_t s_end_tobogan;
 sem_t s_mid_tobogan;
 pthread_mutex_t t_tobogan;
+pthread_mutex_t t_comunicate;*/
+sem_t s_recinto,s_vip_frente, s_normal, s_vip;
+pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal;
 
-pthread_mutex_t t_comunicate;
 /*********************************** Functions *******************************************/
+
+
+void *f_cliente (){ //funcao thread clientes
+
+int id_cliente=0;
+int random=0;
+int tipo; //0-> Vip_Frente
+					//1-> VIP
+					//2 -> Normal
+sem_wait (&s_recinto); //semaforo recinto (0,60)
+
+	pthread_mutex_lock(&trinco_recinto);
+		id_cliente=total_clientes ++;
+		random=rand()%100+1; 
+	pthread_mutex_unlock(&trinco_recinto);
+
+	if (random<=simulator.perc_cl_vip_frente){   //Cliente Vip_Frente;
+		tipo=0;
+	} else if  (random<=(simulator.perc_cl_vip+simulator.perc_cl_vip_frente) && random>simulator.perc_cl_vip_frente){
+		tipo=1;
+	} else {
+		tipo=2;
+	}
+
+switch(tipo){
+	case 0:
+
+pthread_mutex_lock(&trinco_vip_frente);
+			vip_frente++;
+			send_message(newsockfd,simulator.minute,13,id_cliente);
+			printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
+pthread_mutex_unlock(&trinco_vip_frente);
+
+sem_wait (&s_vip_frente);
+pthread_mutex_lock(&trinco_vip_frente);
+			send_message(newsockfd,simulator.minute,16,id_cliente);
+			vip_frente--;
+pthread_mutex_unlock(&trinco_vip_frente);
+			break;
+
+	case 1:
+pthread_mutex_lock(&trinco_vip);
+			vip++;
+		  send_message(newsockfd,simulator.minute,12,id_cliente);
+			printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
+pthread_mutex_unlock(&trinco_vip);
+
+sem_wait (&s_vip);
+pthread_mutex_lock(&trinco_vip);
+			send_message(newsockfd,simulator.minute,15,id_cliente);
+
+			vip--;
+pthread_mutex_unlock(&trinco_vip);
+			break;
+
+	case 2:
+pthread_mutex_lock(&trinco_normal);
+			normal++;
+			printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
+			send_message(newsockfd,simulator.minute,11,id_cliente);
+pthread_mutex_unlock(&trinco_normal);
+
+sem_wait (&s_normal);
+pthread_mutex_lock(&trinco_normal);
+			send_message(newsockfd,simulator.minute,14,id_cliente);
+			normal--;
+pthread_mutex_unlock(&trinco_normal);
+				break;
+			}
+
+sem_post (&s_recinto);
+
+}
+
+
+int main(int argc, char **argv){
+								srand(time(NULL));
+
+								int *configuration_values = read_method(argc, argv[1]);
+
+								//DEBUG = configuration_values[0];
+								simulator.mr_fim = configuration_values[2]*60;
+
+								simulator.mr_capacidade = configuration_values[0];
+								simulator.mr_inicio = configuration_values[1]*60;
+								//simulator.minute = simulator.start_time;
+								simulator.bilh_encerra = configuration_values[3]*60;
+								simulator.cap_carro1 = configuration_values[4];
+								simulator.cap_carro2 = configuration_values[5];
+								simulator.cap_f_interior = configuration_values[6];
+								simulator.perc_cl_normal = configuration_values[7];
+								simulator.mr_temp_volta = configuration_values[8];
+								simulator.perc_cl_vip = configuration_values[9];
+								simulator.perc_cl_vip_frente = configuration_values[10];
+								simulator.perc_avaria = configuration_values[11];
+								simulator.perc_des_fila_ext = configuration_values[12];
+								simulator.perc_des_cl_normal = configuration_values[13];
+								simulator.per_des_cl_vip = configuration_values[14];
+								simulator.per_des_cl_vipf = configuration_values[15];
+
+
+								/*if(DEBUG)*/
+								printf(" mr_capacidade:%d\n mr_inicio:%d\n mr_fim:%d\n bilh_encerra:%d\n cap_carro1:%d\n cap_carro2:%d\n cap_f_interior:%d\n perc_cl_normal:%d\n mr_temp_volta:%d\n perc_cl_vip:%d\n perc_cl_vip_frente:%d\n perc_avaria:%d\n perc_des_fila_ext:%d\n perc_des_cl_normal:%d\n per_des_cl_vip:%d\n per_des_cl_vipf:%d\n", simulator.mr_capacidade, simulator.mr_inicio,  simulator.mr_fim, simulator.bilh_encerra, simulator.cap_carro1, simulator.cap_carro2, simulator.cap_f_interior, simulator.perc_cl_normal, simulator.mr_temp_volta, simulator.perc_cl_vip, simulator.perc_cl_vip_frente, simulator.perc_avaria, simulator.perc_des_fila_ext, simulator.perc_des_cl_normal, simulator.per_des_cl_vip, simulator.per_des_cl_vipf);
+
+
+
+								/****************************** Semaphores and mutex init ********************************/
+
+								/*sem_init(&s_aquapark,0,simulator.capacity);
+								sem_init(&s_pool,0,15);
+								sem_init(&s_end_tobogan,0,0);
+								sem_init(&s_client_tobogan,0,0);
+								sem_init(&s_client_tobogan_prio,0,0);
+								sem_init(&s_client_tobogan_no_prio,0,0);*/
+
+
+
+								sem_init(&s_recinto,0,simulator.mr_capacidade);
+								sem_init(&s_vip_frente,0,0);
+								sem_init(&s_vip,0,0);
+								sem_init(&s_normal,0,0);
+
+
+							//	pthread_mutex_init(&t_comunicate,NULL);
+								pthread_mutex_init(&trinco_recinto,NULL);
+								pthread_mutex_init(&trinco_vip_frente,NULL);
+								pthread_mutex_init(&trinco_vip,NULL);
+								pthread_mutex_init(&trinco_normal,NULL);
+
+
+
+								/**************************** Initializes global variables *******************************/
+								/*aquapark_open = 1;
+								attraction_open = 1;
+								clients_norm_tobogan = 0;
+								clients_prio_tobogan = 0;
+
+								/************************************ Socket *********************************************/
+								int clilen;
+								char buffer[256];
+								struct sockaddr_in serv_addr, cli_addr;
+								int n;
+								sockfd = socket(AF_INET, SOCK_STREAM, 0);
+								if(sockfd<0) printf("ERROR opening socket\n");
+								bzero((char *) &serv_addr, sizeof(serv_addr));
+								serv_addr.sin_family = AF_INET;
+								serv_addr.sin_addr.s_addr = INADDR_ANY;
+								serv_addr.sin_port = htons((rand()%9999)+1024);
+								if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr))<0) printf("ERROR on binding\n");
+								listen(sockfd,5);
+								clilen = sizeof(cli_addr);
+								newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+								if(newsockfd<0) printf("ERROR on accept\n");
+								bzero(buffer,256);
+
+								do {
+																n = read(newsockfd,buffer,255);
+																if(n<0) printf("ERROR reading from socket\n");
+								} while(strcmp(buffer,"100"));
+								system("clear");
+								printf("A simulação começou\n");
+
+								/*********************************** creates threads **********************************/
+
+								for(int i=0;i<90;i++){
+								if(pthread_create((&t_cliente), NULL,(void *)&f_cliente,NULL) != 0) { //thread sunbath
+																printf("Error creating thread\n");
+																exit(1);}
+																usleep(300000);
+															}
+
+
+
+								/*if(pthread_create(&(t_aquapark), NULL,(void *)&aquapark,NULL) != 0) { //thread sunbath
+																printf("Error creating thread\n");
+																exit(1);
+								}
+
+								if(pthread_create(&(t_toboggan), NULL,(void *)&toboggan,NULL) != 0) { //thread toboggan
+																printf("Error creating thread\n");
+																exit(1);
+								}
+
+								/*if(pthread_create(&(t_race), NULL,(void *)&race,NULL) != 0) { //thread race
+								        printf("Error creating thread\n");
+								        exit(1);
+								   }*/
+
+								/*int created_clients = create_client();
+								//printf("created_clients : %d\n",created_clients );
+
+								//closes in the next departure
+								//pthread_join(t_race , NULL);
+								pthread_join(t_toboggan, NULL);
+								//waits that all clients are over
+								int i;
+								for (i = 1; i < created_clients; ++i)
+								{
+																pthread_join(t_cliente[i], NULL); // falta ver isto
+								}
+								aquapark_open = 0;
+
+								printf("[%s] A montanha russa está encerrada!\n", make_hours(simulator.minute));
+
+								pthread_mutex_lock(&t_comunicate);
+								send_message(newsockfd,simulator.minute,101,-1);
+								pthread_mutex_unlock(&t_comunicate);
+*/
+								do {
+																n = read(newsockfd,buffer,255);
+																if(n<0) printf("ERROR reading from socket\n");
+								} while(strcmp(buffer,"101"));
+
+								close(sockfd);
+
+}
+
+
 /*
 //------------------------------SUNBATH------------------------------
 void sunbath( int id){
@@ -404,123 +629,3 @@ int * aquapark(){
 								}
 
 }*/
-int main(int argc, char **argv){
-								srand(time(NULL));
-
-								int *configuration_values = read_method(argc, argv[1]);
-
-								//DEBUG = configuration_values[0];
-								simulator.mr_fim = configuration_values[2]*60;
-
-								simulator.mr_capacidade = configuration_values[0];
-								simulator.mr_inicio = configuration_values[1]*60;
-								//simulator.minute = simulator.start_time;
-								simulator.bilh_encerra = configuration_values[3]*60;
-								simulator.cap_carro1 = configuration_values[4];
-								simulator.cap_carro2 = configuration_values[5];
-								simulator.cap_f_interior = configuration_values[6];
-								simulator.perc_cl_normal = configuration_values[7];
-								simulator.mr_temp_volta = configuration_values[8];
-								simulator.perc_cl_vip = configuration_values[9];
-								simulator.perc_cl_vip_frente = configuration_values[10];
-								simulator.perc_avaria = configuration_values[11];
-								simulator.perc_des_fila_ext = configuration_values[12];
-								simulator.perc_des_cl_normal = configuration_values[13];
-								simulator.per_des_cl_vip = configuration_values[14];
-								simulator.per_des_cl_vipf = configuration_values[15];
-
-
-								/*if(DEBUG)*/
-								printf(" mr_capacidade:%d\n mr_inicio:%d\n mr_fim:%d\n bilh_encerra:%d\n cap_carro1:%d\n cap_carro2:%d\n cap_f_interior:%d\n perc_cl_normal:%d\n mr_temp_volta:%d\n perc_cl_vip:%d\n perc_cl_vip_frente:%d\n perc_avaria:%d\n perc_des_fila_ext:%d\n perc_des_cl_normal:%d\n per_des_cl_vip:%d\n per_des_cl_vipf:%d\n", simulator.mr_capacidade, simulator.mr_inicio,  simulator.mr_fim, simulator.bilh_encerra, simulator.cap_carro1, simulator.cap_carro2, simulator.cap_f_interior, simulator.perc_cl_normal, simulator.mr_temp_volta, simulator.perc_cl_vip, simulator.perc_cl_vip_frente, simulator.perc_avaria, simulator.perc_des_fila_ext, simulator.perc_des_cl_normal, simulator.per_des_cl_vip, simulator.per_des_cl_vipf);
-							}
-
-
-								/****************************** Semaphores and mutex init ********************************/
-
-								/*sem_init(&s_aquapark,0,simulator.capacity);
-								sem_init(&s_pool,0,15);
-								sem_init(&s_end_tobogan,0,0);
-								sem_init(&s_client_tobogan,0,0);
-								sem_init(&s_client_tobogan_prio,0,0);
-								sem_init(&s_client_tobogan_no_prio,0,0);
-
-								pthread_mutex_init(&t_comunicate,NULL);
-
-
-								/**************************** Initializes global variables *******************************/
-								/*aquapark_open = 1;
-								attraction_open = 1;
-								clients_norm_tobogan = 0;
-								clients_prio_tobogan = 0;
-
-								/************************************ Socket *********************************************/
-								/*int clilen;
-								char buffer[256];
-								struct sockaddr_in serv_addr, cli_addr;
-								int n;
-								sockfd = socket(AF_INET, SOCK_STREAM, 0);
-								if(sockfd<0) printf("ERROR opening socket\n");
-								bzero((char *) &serv_addr, sizeof(serv_addr));
-								serv_addr.sin_family = AF_INET;
-								serv_addr.sin_addr.s_addr = INADDR_ANY;
-								serv_addr.sin_port = htons((rand()%9999)+1024);
-								if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr))<0) printf("ERROR on binding\n");
-								listen(sockfd,5);
-								clilen = sizeof(cli_addr);
-								newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-								if(newsockfd<0) printf("ERROR on accept\n");
-								bzero(buffer,256);
-
-								do {
-																n = read(newsockfd,buffer,255);
-																if(n<0) printf("ERROR reading from socket\n");
-								} while(strcmp(buffer,"100"));
-
-								printf("A simulação começou\n");
-
-								/*********************************** creates threads **********************************/
-
-								/*if(pthread_create(&(t_aquapark), NULL,(void *)&aquapark,NULL) != 0) { //thread sunbath
-																printf("Error creating thread\n");
-																exit(1);
-								}
-
-								if(pthread_create(&(t_toboggan), NULL,(void *)&toboggan,NULL) != 0) { //thread toboggan
-																printf("Error creating thread\n");
-																exit(1);
-								}
-
-								/*if(pthread_create(&(t_race), NULL,(void *)&race,NULL) != 0) { //thread race
-								        printf("Error creating thread\n");
-								        exit(1);
-								   }*/
-
-								/*int created_clients = create_client();
-								//printf("created_clients : %d\n",created_clients );
-
-								//closes in the next departure
-								//pthread_join(t_race , NULL);
-								pthread_join(t_toboggan, NULL);
-								//waits that all clients are over
-								int i;
-								for (i = 1; i < created_clients; ++i)
-								{
-																pthread_join(t_cliente[i], NULL); // falta ver isto
-								}
-								aquapark_open = 0;
-
-								printf("[%s] A montanha russa está encerrada!\n", make_hours(simulator.minute));
-
-								pthread_mutex_lock(&t_comunicate);
-								send_message(newsockfd,simulator.minute,101,-1);
-								pthread_mutex_unlock(&t_comunicate);
-
-								do {
-																n = read(newsockfd,buffer,255);
-																if(n<0) printf("ERROR reading from socket\n");
-								} while(strcmp(buffer,"101"));
-
-								close(sockfd);
-
-}
-*/
