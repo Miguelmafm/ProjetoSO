@@ -49,12 +49,17 @@ int static clients_prio_tobogan;
 int static clients_norm_tobogan;
 s_cliente static cliente[267785];*/
 int total_clientes=1;
+int total_clientes_recinto=1;
 int vip_frente=0;
 int vip=0;
 int normal=0;
 
+
 /************************** Threads, Mutex & Semaphores **********************************/
 pthread_t t_cliente;
+pthread_t t_colaborador;
+pthread_t t_montanha_russa;
+
 /*
 pthread_t t_aquapark;
 //pthread_t t_swimming_pool;
@@ -73,8 +78,8 @@ sem_t s_end_tobogan;
 sem_t s_mid_tobogan;
 pthread_mutex_t t_tobogan;
 pthread_mutex_t t_comunicate;*/
-sem_t s_recinto,s_vip_frente, s_normal, s_vip;
-pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal;
+sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_cap_carro1, s_cap_carro2, s_viagem_mr, s_inicia_viagem, s_terminou_viagem;
+pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto;
 
 /*********************************** Functions *******************************************/
 
@@ -90,7 +95,8 @@ sem_wait (&s_recinto); //semaforo recinto (0,60)
 
 	pthread_mutex_lock(&trinco_recinto);
 		id_cliente=total_clientes ++;
-		random=rand()%100+1; 
+		total_clientes_recinto++;
+		random=rand()%100+1;
 	pthread_mutex_unlock(&trinco_recinto);
 
 	if (random<=simulator.perc_cl_vip_frente){   //Cliente Vip_Frente;
@@ -107,13 +113,13 @@ switch(tipo){
 pthread_mutex_lock(&trinco_vip_frente);
 			vip_frente++;
 			send_message(newsockfd,simulator.minute,13,id_cliente);
-			printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
+		//	printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
 pthread_mutex_unlock(&trinco_vip_frente);
 
 sem_wait (&s_vip_frente);
 pthread_mutex_lock(&trinco_vip_frente);
+			printf(" O cliente VIP_FRENTE com o id %d entrou na MONTANHA Russa\n",id_cliente );
 			send_message(newsockfd,simulator.minute,16,id_cliente);
-			vip_frente--;
 pthread_mutex_unlock(&trinco_vip_frente);
 			break;
 
@@ -121,36 +127,127 @@ pthread_mutex_unlock(&trinco_vip_frente);
 pthread_mutex_lock(&trinco_vip);
 			vip++;
 		  send_message(newsockfd,simulator.minute,12,id_cliente);
-			printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
+		//	printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
 pthread_mutex_unlock(&trinco_vip);
 
 sem_wait (&s_vip);
 pthread_mutex_lock(&trinco_vip);
 			send_message(newsockfd,simulator.minute,15,id_cliente);
-
-			vip--;
+			printf(" Cliente vip com id %d entrou na montanha russa \n",id_cliente );
 pthread_mutex_unlock(&trinco_vip);
 			break;
 
 	case 2:
 pthread_mutex_lock(&trinco_normal);
 			normal++;
-			printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
+			//printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
 			send_message(newsockfd,simulator.minute,11,id_cliente);
 pthread_mutex_unlock(&trinco_normal);
 
 sem_wait (&s_normal);
 pthread_mutex_lock(&trinco_normal);
 			send_message(newsockfd,simulator.minute,14,id_cliente);
-			normal--;
+			printf(" Cliente normal com id %d entrou na montanha russa \n",id_cliente );
 pthread_mutex_unlock(&trinco_normal);
 				break;
 			}
 
-sem_post (&s_recinto);
+sem_wait (&s_viagem_mr);
 
+pthread_mutex_lock(&trinco_sai_recinto);
+total_clientes_recinto--;
+printf(" O cliente com ID %d , e o tipo %d saiu do recinto\n",id_cliente, tipo);
+
+pthread_mutex_unlock(&trinco_sai_recinto);
+sem_post (&s_recinto);
 }
 
+
+void *f_colaborador (){ //funcao thread colaborador
+
+	int carro1=0;
+	int carro2=0;
+
+while (1){
+
+while(carro1<simulator.cap_carro1){
+
+	if(vip_frente > 0){
+		sem_post (&s_vip_frente);
+		pthread_mutex_lock(&trinco_carro1);
+		vip_frente--;
+		carro1++;
+		pthread_mutex_unlock(&trinco_carro1);
+
+	}	else if(vip > 0){
+		sem_post (&s_vip);
+		pthread_mutex_lock(&trinco_carro1);
+		carro1++;
+		vip--;
+		pthread_mutex_unlock(&trinco_carro1);
+
+	}	else if(normal > 0){
+	sem_post (&s_normal);
+	pthread_mutex_lock(&trinco_carro1);
+	carro1++;
+	normal--;
+	pthread_mutex_unlock(&trinco_carro1);
+
+}
+usleep(1000000);
+}
+printf("O carro 1 Cheio! \n" );
+
+while(carro2<simulator.cap_carro2){
+
+	if(vip>0){
+	sem_post (&s_vip);
+	pthread_mutex_lock(&trinco_carro2);
+	carro2++;
+	vip--;
+	pthread_mutex_unlock(&trinco_carro2);
+	}
+
+	else if(normal>0){
+	sem_post (&s_normal);
+	pthread_mutex_lock(&trinco_carro2);
+	carro2++;
+	normal--;
+	pthread_mutex_unlock(&trinco_carro2);
+	}
+	usleep(1000000);
+}
+	printf("O carro 2 Cheio! \n" );
+
+
+sem_post (&s_inicia_viagem); //vai iniciar a primeira viagem
+
+sem_wait (&s_terminou_viagem);  //Espera que a volta da montanha russa termine
+carro1=0;
+carro2=0;															//E todo os clientes saiam dos carros
+
+printf("NOVA VIAGEM --- METER CLIENTE NA MONTANHA RUssA---\n");
+
+}
+}
+
+
+void *f_montanha_russa (){ //funcao thread montanha russa
+
+while (1){
+
+	sem_wait (&s_inicia_viagem);   //Espera que os carros encham
+	printf("A viagem iniciou \n");
+	usleep (3000000);
+	printf("A viagem acabou \n");
+
+	for (int i=0; i<20; i++){
+		sem_post (&s_viagem_mr);  //Da post aos clientes para sairem do recinto
+	}
+
+ 	sem_post (&s_terminou_viagem);
+}
+}
 
 int main(int argc, char **argv){
 								srand(time(NULL));
@@ -198,6 +295,13 @@ int main(int argc, char **argv){
 								sem_init(&s_vip_frente,0,0);
 								sem_init(&s_vip,0,0);
 								sem_init(&s_normal,0,0);
+								sem_init(&s_cap_carro1,0,simulator.cap_carro1);
+								sem_init(&s_cap_carro2,0,simulator.cap_carro2);
+								sem_init(&s_viagem_mr,0,0);
+								sem_init(&s_inicia_viagem,0,0);
+								sem_init(&s_terminou_viagem,0,0);
+
+
 
 
 							//	pthread_mutex_init(&t_comunicate,NULL);
@@ -205,6 +309,11 @@ int main(int argc, char **argv){
 								pthread_mutex_init(&trinco_vip_frente,NULL);
 								pthread_mutex_init(&trinco_vip,NULL);
 								pthread_mutex_init(&trinco_normal,NULL);
+								pthread_mutex_init(&trinco_carro1,NULL);
+								pthread_mutex_init(&trinco_carro2,NULL);
+								pthread_mutex_init(&trinco_sai_recinto,NULL);
+
+
 
 
 
@@ -241,13 +350,22 @@ int main(int argc, char **argv){
 
 								/*********************************** creates threads **********************************/
 
-								for(int i=0;i<90;i++){
-								if(pthread_create((&t_cliente), NULL,(void *)&f_cliente,NULL) != 0) { //thread sunbath
+								if(pthread_create((&t_colaborador), NULL,(void *)&f_colaborador,NULL) != 0) {
+																							printf("Error creating thread\n");
+																							exit(1);}
+
+								if(pthread_create((&t_montanha_russa), NULL,(void *)&f_montanha_russa,NULL) != 0) {
+																								printf("Error creating thread\n");
+																								exit(1);}
+
+
+
+							  for(int i=0;i<90;i++){
+								if(pthread_create((&t_cliente), NULL,(void *)&f_cliente,NULL) != 0) {
 																printf("Error creating thread\n");
 																exit(1);}
-																usleep(300000);
+																usleep(600000);
 															}
-
 
 
 								/*if(pthread_create(&(t_aquapark), NULL,(void *)&aquapark,NULL) != 0) { //thread sunbath
