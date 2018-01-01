@@ -196,7 +196,7 @@ while(carro1<simulator.cap_carro1){
 }
 usleep(1000000);
 }
-printf("O carro 1 Cheio! \n" );
+printf("O carro da frente Cheio! \n" );
 
 while(carro2<simulator.cap_carro2){
 
@@ -217,7 +217,11 @@ while(carro2<simulator.cap_carro2){
 	}
 	usleep(1000000);
 }
-	printf("O carro 2 Cheio! \n" );
+	printf("O carro de tras Cheio! \n" );
+	printf("O Colaborador esta a verificar os cintos de seguranca \n" );
+
+usleep(5000000);
+
 
 
 sem_post (&s_inicia_viagem); //vai iniciar a primeira viagem
@@ -226,7 +230,8 @@ sem_wait (&s_terminou_viagem);  //Espera que a volta da montanha russa termine
 carro1=0;
 carro2=0;															//E todo os clientes saiam dos carros
 
-printf("NOVA VIAGEM --- METER CLIENTE NA MONTANHA RUssA---\n");
+
+
 
 }
 }
@@ -240,9 +245,14 @@ while (1){
 	printf("A viagem iniciou \n");
 	usleep (3000000);
 	printf("A viagem acabou \n");
+	printf("O Caloboradora esta a retirar os cintos de seguranca\n");
+	usleep(5000000);
+
 
 	for (int i=0; i<20; i++){
 		sem_post (&s_viagem_mr);  //Da post aos clientes para sairem do recinto
+		usleep(1000000);
+
 	}
 
  	sem_post (&s_terminou_viagem);
