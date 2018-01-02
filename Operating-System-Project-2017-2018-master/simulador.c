@@ -43,7 +43,8 @@ typedef struct {
 s_simulator static simulator;
 
 int static sockfd, newsockfd;
-/*int static aquapark_open;
+int static m_russa_open;
+/*
 int static attraction_open;
 int static clients_prio_tobogan;
 int static clients_norm_tobogan;
@@ -60,8 +61,9 @@ pthread_t t_cliente;
 pthread_t t_colaborador;
 pthread_t t_montanha_russa;
 
+
+pthread_t t_bilheteira;
 /*
-pthread_t t_aquapark;
 //pthread_t t_swimming_pool;
 pthread_t t_toboggan;
 pthread_t t_race;
@@ -82,6 +84,18 @@ sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_cap_carro1, s_cap_carro2, s_via
 pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto;
 
 /*********************************** Functions *******************************************/
+
+int * bilheteira(){
+
+								while(m_russa_open) {
+																if(((simulator.mr_fim)-30) == simulator.minute) {
+																								printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
+																								//attraction_open=0;
+																}
+																usleep(500000);
+																simulator.minute++;
+								}
+							}
 
 
 void *f_cliente (){ //funcao thread clientes
@@ -113,7 +127,7 @@ switch(tipo){
 pthread_mutex_lock(&trinco_vip_frente);
 			vip_frente++;
 			send_message(newsockfd,simulator.minute,13,id_cliente);
-		//	printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
+			printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
 pthread_mutex_unlock(&trinco_vip_frente);
 
 sem_wait (&s_vip_frente);
@@ -127,7 +141,7 @@ pthread_mutex_unlock(&trinco_vip_frente);
 pthread_mutex_lock(&trinco_vip);
 			vip++;
 		  send_message(newsockfd,simulator.minute,12,id_cliente);
-		//	printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
+			printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
 pthread_mutex_unlock(&trinco_vip);
 
 sem_wait (&s_vip);
@@ -140,7 +154,7 @@ pthread_mutex_unlock(&trinco_vip);
 	case 2:
 pthread_mutex_lock(&trinco_normal);
 			normal++;
-			//printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
+			printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
 			send_message(newsockfd,simulator.minute,11,id_cliente);
 pthread_mutex_unlock(&trinco_normal);
 
@@ -269,8 +283,7 @@ int main(int argc, char **argv){
 
 								simulator.mr_capacidade = configuration_values[0];
 								simulator.mr_inicio = configuration_values[1]*60;
-								//simulator.minute = simulator.start_time;
-								simulator.bilh_encerra = configuration_values[3]*60;
+								simulator.minute = simulator.mr_inicio;
 								simulator.cap_carro1 = configuration_values[4];
 								simulator.cap_carro2 = configuration_values[5];
 								simulator.cap_f_interior = configuration_values[6];
@@ -328,7 +341,8 @@ int main(int argc, char **argv){
 
 
 								/**************************** Initializes global variables *******************************/
-								/*aquapark_open = 1;
+								m_russa_open = 1;
+								/*
 								attraction_open = 1;
 								clients_norm_tobogan = 0;
 								clients_prio_tobogan = 0;
@@ -360,6 +374,15 @@ int main(int argc, char **argv){
 
 								/*********************************** creates threads **********************************/
 
+								if(pthread_create(&(t_bilheteira), NULL,(void *)&bilheteira,NULL) != 0) { //thread sunbath
+																printf("Error creating thread\n");
+																exit(1);
+								}
+
+
+
+
+
 								if(pthread_create((&t_colaborador), NULL,(void *)&f_colaborador,NULL) != 0) {
 																							printf("Error creating thread\n");
 																							exit(1);}
@@ -378,15 +401,12 @@ int main(int argc, char **argv){
 															}
 
 
-								/*if(pthread_create(&(t_aquapark), NULL,(void *)&aquapark,NULL) != 0) { //thread sunbath
-																printf("Error creating thread\n");
-																exit(1);
-								}
 
-								if(pthread_create(&(t_toboggan), NULL,(void *)&toboggan,NULL) != 0) { //thread toboggan
-																printf("Error creating thread\n");
-																exit(1);
-								}
+
+								//if(pthread_create(&(t_toboggan), NULL,(void *)&toboggan,NULL) != 0) { //thread toboggan
+																//printf("Error creating thread\n");
+																//exit(1);
+								//}
 
 								/*if(pthread_create(&(t_race), NULL,(void *)&race,NULL) != 0) { //thread race
 								        printf("Error creating thread\n");
