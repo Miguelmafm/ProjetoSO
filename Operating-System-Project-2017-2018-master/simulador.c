@@ -97,10 +97,15 @@ int * bilheteira(){
 
 								while(m_russa_open) {
 																if(((simulator.mr_fim)-30) == simulator.minute) {
-																								printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
+																	pthread_mutex_lock(&trinco_comunicate);
+																	send_message(newsockfd,simulator.minute,90,1);
+																	printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
+																	pthread_mutex_unlock(&trinco_comunicate);
+
+
 																								//attraction_open=0;
 																}
-																usleep(500000);
+																usleep(700000);
 																simulator.minute++;
 								}
 							}
@@ -179,7 +184,7 @@ sem_wait (&s_viagem_mr);
 pthread_mutex_lock(&trinco_sai_recinto);
 total_clientes_recinto--;
 printf(" O cliente com ID %d , e o tipo %d saiu do recinto\n",id_cliente, tipo);
-
+send_message(newsockfd,simulator.minute,32,id_cliente);
 pthread_mutex_unlock(&trinco_sai_recinto);
 sem_post (&s_recinto);
 }
@@ -227,6 +232,9 @@ if((vip_frente==0 && vip==0 && normal==0)){
 }
 if(carro1==10){
 printf("Carruagem da frente está cheia! \n" );
+pthread_mutex_lock(&trinco_comunicate);
+send_message(newsockfd,simulator.minute,21,1);
+pthread_mutex_unlock(&trinco_comunicate);
 }
 
 while(carro2<simulator.cap_carro2 && filas_vazios2){
@@ -255,16 +263,29 @@ while(carro2<simulator.cap_carro2 && filas_vazios2){
 
 if(carro2==10){
 printf("Carruagens estão cheias! \n" );
+pthread_mutex_lock(&trinco_comunicate);
+send_message(newsockfd,simulator.minute,22,1);
+pthread_mutex_unlock(&trinco_comunicate);
 }
 
 					if(vip==0 && normal ==0 && vip_frente == 0 && simulator.minute < ((simulator.mr_fim)-30) && carro1==0 && carro2== 0) {
 						  atracao_aberta = 0;
 							printf("[%s] A montanha russa terminou as viagens!\n", make_hours(simulator.minute));
+
 					} else {
 							clientes_no_caro = carro1 + carro2;
-							printf("O Colaborador esta a verificar os cintos de seguranca \n" );
 
-							usleep(1000000);
+
+
+							printf("O Colaborador esta a verificar os cintos de seguranca \n" );
+							usleep(200000);
+							pthread_mutex_lock(&trinco_comunicate);
+							send_message(newsockfd,simulator.minute,41,1);
+							pthread_mutex_unlock(&trinco_comunicate);
+
+
+								usleep(1000000);
+
 
 							sem_post (&s_inicia_viagem); //vai iniciar a primeira viagem
 
@@ -287,12 +308,29 @@ void *f_montanha_russa (){ //funcao thread montanha russa
 while (1){
 
 	sem_wait (&s_inicia_viagem);   //Espera que os carros encham
+
 	printf("A viagem iniciou \n");
-	usleep (5000000);
+
+	pthread_mutex_lock(&trinco_comunicate);
+	send_message(newsockfd,simulator.minute,61,1);
+	pthread_mutex_unlock(&trinco_comunicate);
+
+	usleep (4000000);
+
 	printf("A viagem acabou \n");
+
+	pthread_mutex_lock(&trinco_comunicate);
+	send_message(newsockfd,simulator.minute,64,1);
+	pthread_mutex_unlock(&trinco_comunicate);
+
 	usleep (500000);
 
 	printf("O Caloborador esta a retirar os cintos de seguranca\n");
+
+	pthread_mutex_lock(&trinco_comunicate);
+	send_message(newsockfd,simulator.minute,42,1);
+	pthread_mutex_unlock(&trinco_comunicate);
+
 	usleep(1000000);
 
 
@@ -309,7 +347,7 @@ while (1){
 int c_cliente(){
 	int n_clientes = 0;
 	int tempo_final_de_chegada = simulator.mr_fim-30;
-	for(int i=0; i<= 20/*simulator.mr_pop_mr*/ && simulator.minute < tempo_final_de_chegada ; i++){
+	for(int i=0; i<= 25/*simulator.mr_pop_mr*/ && simulator.minute < tempo_final_de_chegada ; i++){
 						if(pthread_create((&t_cliente), NULL,(void *)&f_cliente,NULL) != 0) {
 														printf("Error creating thread\n");
 														exit(1);
