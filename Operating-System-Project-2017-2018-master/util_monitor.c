@@ -466,25 +466,29 @@ int write_log(int hour, int state, int client_id){
 								}
 
 								switch(state) {
-										case 1: fprintf(file_log,"[%s] ❤ Cliente %d chegou à fila exterior da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 1: fprintf(file_log,"[%s] ❤ Cliente %d chegou à Montanha Russa.\n", make_hours(hour), client_id); break;
 
-										case 11: fprintf(file_log,"[%s] ⚫ Cliente Normal %d entrou na fila interior da Montanha Russa.\n", make_hours(hour), client_id); break;
-										case 12: fprintf(file_log,"[%s] ⚫ Cliente Vip %d entrou na fila interior da Montanha Russa.\n", make_hours(hour), client_id); break;
-										case 13: fprintf(file_log,"[%s] ⚫ Cliente Vip_frente %d entrou na fila interior da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 11: fprintf(file_log,"[%s] ⚫ Cliente Normal %d entrou no recinto da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 12: fprintf(file_log,"[%s] ⚫ Cliente Vip %d entrou no recinto da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 13: fprintf(file_log,"[%s] ⚫ Cliente Vip_frente %d entrou no recinto da Montanha Russa.\n", make_hours(hour), client_id); break;
 
-										case 21: fprintf(file_log,"[%s] ❌ Carro da frente está cheio.\n", make_hours(hour)); break;
-										case 22: fprintf(file_log,"[%s] ❌ Montanha Russa esta cheia.\n", make_hours(hour)); break;
+										case 14: fprintf(file_log,"[%s] ⚫ Cliente Normal %d entrou na carruagem.\n", make_hours(hour), client_id); break;
+										case 15: fprintf(file_log,"[%s] ⚫ Cliente Vip %d entrou na carruagem.\n", make_hours(hour), client_id); break;
+										case 16: fprintf(file_log,"[%s] ⚫ Cliente Vip_frente %d entrou na carruagem.\n", make_hours(hour), client_id); break;
 
-										case 31: fprintf(file_log,"[%s] ⚫ Cliente %d saiu da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 21: fprintf(file_log,"[%s] ❌ Carruagem da frente está cheia.\n", make_hours(hour)); break;
+										case 22: fprintf(file_log,"[%s] ❌ Montanha Russa está cheia.\n", make_hours(hour)); break;
+
+										case 31: fprintf(file_log,"[%s] ⚫ Cliente %d saiu da carruagem.\n", make_hours(hour), client_id); break;
 										case 32: fprintf(file_log,"[%s] ⚫ Cliente %d saiu do recinto da Montanha Russa.\n", make_hours(hour), client_id); break;
 
 										case 41: fprintf(file_log,"[%s] * Colaborador esta a verificar os cintos de seguranca.\n", make_hours(hour)); break;
 										case 42: fprintf(file_log,"[%s] * Cintos de seguranca verificados com sucesso.\n", make_hours(hour)); break;
 
-										case 51: fprintf(file_log,"[%s] ⚫ Cliente %d na fila exterior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
-										case 52: fprintf(file_log,"[%s] ⚫ Cliente normal %d na fila interior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
-										case 53: fprintf(file_log,"[%s] ⚫ Cliente vip %d na fila interior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
-										case 54: fprintf(file_log,"[%s] ⚫ Cliente vip_frente %d na fila interior da Montanha Russa desistiu.\n", make_hours(hour), client_id); break;
+										case 51: fprintf(file_log,"[%s] ⚫ Cliente %d desistiu da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 52: fprintf(file_log,"[%s] ⚫ Cliente normal %d desistiu da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 53: fprintf(file_log,"[%s] ⚫ Cliente vip %d desistiu da Montanha Russa.\n", make_hours(hour), client_id); break;
+										case 54: fprintf(file_log,"[%s] ⚫ Cliente vip_frente %d desistiu da Montanha Russa.\n", make_hours(hour), client_id); break;
 
 										case 61: fprintf(file_log,"[%s] ❌ A montanha russa iniciou a viagem.\n", make_hours(hour)); break;
 										case 62: fprintf(file_log,"[%s] ❌ A montanha russa parou devido a uma avaria.\n", make_hours(hour)); break;
@@ -558,40 +562,43 @@ int * decode (char str[28]){
 
 void write_decoder(int hour, int state, int client_id) {
 								switch(state) {
-								case 1: printf("   │  [%s] ❤ Cliente",make_hours(hour)); printf(" %s chegou à fila exterior da Mont. Russa            │\n", three_digit_number(client_id)); break;
-								case 2: printf("   │  [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou na fila interior da Mont. Russa    │\n", three_digit_number(client_id)); break;
-								case 3: printf("   │  [%s] ➤ Cliente Vip",make_hours(hour)); printf(" %s entrou na fila interior da Mont. Russa       │\n", three_digit_number(client_id)); break;
-								case 4: printf("   │  [%s] ➤ Cliente Vip_frente",make_hours(hour)); printf(" %s entrou na fila interior da Mont. Russa│\n", three_digit_number(client_id)); break;
+								case 1: printf("   │  [%s] ❤ Cliente",make_hours(hour)); printf(" %s chegou à Montanha Russa                          │\n", three_digit_number(client_id)); break;
 
-								case 5: printf("   │  [%s] ❌ Carro da frente está cheio.                                  │\n", make_hours(hour)); break;
-								case 11: printf("   │  [%s] ❌ Montanha Russa esta cheia.                                   │\n", make_hours(hour)); break;
-								case 12: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s saiu da Montanha Russa.                          │\n", three_digit_number(client_id)); break;
-								case 13: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s saiu do recinto da Montanha Russa.               │\n", three_digit_number(client_id)); break;
+								case 11: printf("   │  [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa       │\n", three_digit_number(client_id)); break;
+								case 12: printf("   │  [%s] ➤ Cliente Vip",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa          │\n", three_digit_number(client_id)); break;
+								case 13: printf("   │  [%s] ➤ Cliente Vip_frente",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa   │\n", three_digit_number(client_id)); break;
 
-								case 14: printf("   │  [%s] * Colaborador esta a verificar os cintos de seguranca.         │\n", make_hours(hour)); break;
-								case 15: printf("   │  [%s] * Cintos de seguranca verificados com sucesso.                 │\n", make_hours(hour)); break;
+								case 14: printf("   │  [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou na carruagem                       │\n", three_digit_number(client_id)); break;
+								case 15: printf("   │  [%s] ➤ Cliente Vip",make_hours(hour)); printf(" %s entrou na carruagem                          │\n", three_digit_number(client_id)); break;
+								case 16: printf("   │  [%s] ➤ Cliente Vip_frente",make_hours(hour)); printf(" %s entrou na carruagem                   │\n", three_digit_number(client_id)); break;
 
-								case 21: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s na fila exterior da Mont. Russa desistiu         │\n", three_digit_number(client_id)); break;
-								case 22: printf("   │  [%s] ⚫ Cliente Normal",make_hours(hour)); printf(" %s na fila interior da Mont. Russa desistiu  │\n", three_digit_number(client_id)); break;
-								case 23: printf("   │  [%s] ⚫ Cliente Vip",make_hours(hour)); printf(" %s na fila interior da Mont. Russa desistiu     │\n", three_digit_number(client_id)); break;
-								case 24: printf("   │  [%s] ⚫ Cliente Vip_frente",make_hours(hour)); printf(" %s na fila interior da Mont. R. desistiu │\n", three_digit_number(client_id)); break;
+								case 21: printf("   │  [%s] ❌ Carruagem da frente está cheia                               │\n", make_hours(hour)); break;
+								case 22: printf("   │  [%s] ❌ Montanha Russa está cheia                                    │\n", make_hours(hour)); break;
 
-								case 25: printf("   │  [%s] ❌ A montanha russa iniciou a viagem.                           │\n", make_hours(hour)); break;
-								case 31: printf("   │  [%s] ❌ A montanha russa parou devido a uma avaria.                  │\n", make_hours(hour)); break;
-								case 32: printf("   │  [%s] ❌ A montanha russa retomou após avaria.                        │\n", make_hours(hour)); break;
-								case 33: printf("   │  [%s] ❌ A montanha russa chegou ao fim da viagem.                    │\n", make_hours(hour)); break;
+								case 31: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s saiu da carruagem                                │\n", three_digit_number(client_id)); break;
+								case 32: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s saiu do recinto da Montanha Russa                │\n", three_digit_number(client_id)); break;
 
-								case 34: printf("   │  [%s] ➤ Ocorreu uma avaria na Montanha Russa.                        │\n", make_hours(hour)); break;
-								case 35: printf("   │  [%s] ➤ O mecanico foi avisado e desloca-se para a Montanha Russa.   │\n", make_hours(hour)); break;
+								case 41: printf("   │  [%s] * Colaborador está a verificar os cintos de seguranca          │\n", make_hours(hour)); break;
+								case 42: printf("   │  [%s] * Cintos de seguranca verificados com sucesso                  │\n", make_hours(hour)); break;
 
-								case 43: printf("   │  [%s] ➤ O mecanico deu inicio a reparacao da Montanha Russa.         │\n", make_hours(hour)); break;
-								case 44: printf("   │  [%s] ➤ O mecanico concluiu com sucesso a reparacao.                 │\n", make_hours(hour)); break;
+								case 51: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s desistiu da Montanha Russa                       │\n", three_digit_number(client_id)); break;
+								case 52: printf("   │  [%s] ⚫ Cliente Normal",make_hours(hour)); printf(" %s desistiu da Montanha Russa                │\n", three_digit_number(client_id)); break;
+								case 53: printf("   │  [%s] ⚫ Cliente Vip",make_hours(hour)); printf(" %s desistiu da Montanha Russa                   │\n", three_digit_number(client_id)); break;
+								case 54: printf("   │  [%s] ⚫ Cliente Vip_frente",make_hours(hour)); printf(" %s desistiu da Montanha Russa            │\n", three_digit_number(client_id)); break;
 
-								case 53: printf("   │  [%s] ➤ Toboggan trip is over.                                       │\n", make_hours(hour)); break;
-								case 54: printf("   │  [%s] ➤ Race trip is over.                                           │\n", make_hours(hour)); break;
+								case 61: printf("   │  [%s] ❌ A montanha russa iniciou a viagem                            │\n", make_hours(hour)); break;
+								case 62: printf("   │  [%s] ❌ A montanha russa parou devido a uma avaria                   │\n", make_hours(hour)); break;
+								case 63: printf("   │  [%s] ❌ A montanha russa retomou após avaria                         │\n", make_hours(hour)); break;
+								case 64: printf("   │  [%s] ❌ A montanha russa chegou ao fim da viagem                     │\n", make_hours(hour)); break;
 
-								case 100: printf("   │  [%s] ⛬ Simulacao iniciada.                                          │\n", make_hours(hour)); break;
-								case 101: printf("   │  [%s] ⛬ Simulacao terminada.                                         │\n", make_hours(hour)); break;
+								case 71: printf("   │  [%s] ➤ Ocorreu uma avaria na Montanha Russa                         │\n", make_hours(hour)); break;
+
+								case 81: printf("   │  [%s] ➤ O mecanico foi avisado e desloca-se para a Montanha Russa    │\n", make_hours(hour)); break;
+								case 82: printf("   │  [%s] ➤ O mecanico deu inicio a reparacao da Montanha Russa          │\n", make_hours(hour)); break;
+								case 83: printf("   │  [%s] ➤ O mecanico concluiu com sucesso a reparacao                  │\n", make_hours(hour)); break;
+
+								case 100: printf("   │  [%s] ⛬ Simulacao iniciada                                           │\n", make_hours(hour)); break;
+								case 101: printf("   │  [%s] ⛬ Simulacao terminada                                          │\n", make_hours(hour)); break;
 								case -1: printf("   │                                                                         │\n"); break;
 								default: printf("   │  [%s] Erro: numero enviado do simulador está errado                  │\n", make_hours(hour)); break;
 							}
@@ -630,7 +637,7 @@ void creat_graph(/*int aqua, int pool, int race, int race_status, int tobogan, i
 																																mister_cheat = 0;
 																								}else{
 																																mister_cheat++;
-																								}
+																								}qweqwe
 																}
 								}else if(mister_cheat != 0 ) {
 																mister_cheat--;
