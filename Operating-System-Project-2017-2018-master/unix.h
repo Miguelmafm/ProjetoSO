@@ -41,6 +41,7 @@ char * three_digit_number(int);
 
 /************************** util_simulador **************************/
 int * read_method();
+time_t t_inicial, t_agora;
 
 /*************************** util_monitor ***************************/
 int write_log();

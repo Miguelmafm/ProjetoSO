@@ -57,6 +57,7 @@ int vip_frente=0;
 int vip=0;
 int normal=0;
 int clientes_no_caro = 0;
+time_t t_inicial, t_agora;
 
 
 /************************** Threads, Mutex & Semaphores **********************************/
@@ -95,8 +96,10 @@ pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, tr
 
 int * bilheteira(){
 
+time(&t_inicial);
+
 								while(m_russa_open) {
-																if(((simulator.mr_fim)-30) == simulator.minute) {
+																if(((simulator.mr_fim)-30) <= simulator.minute) {
 																	pthread_mutex_lock(&trinco_comunicate);
 																	send_message(newsockfd,simulator.minute,90,1);
 																	printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
@@ -105,8 +108,10 @@ int * bilheteira(){
 
 																								//attraction_open=0;
 																}
-																usleep(700000);
-																simulator.minute++;
+																time(&t_agora);
+																simulator.minute=difftime(t_agora,t_inicial);
+
+
 								}
 							}
 
@@ -347,7 +352,7 @@ while (1){
 int c_cliente(){
 	int n_clientes = 0;
 	int tempo_final_de_chegada = simulator.mr_fim-30;
-	for(int i=0; i<= 25/*simulator.mr_pop_mr*/ && simulator.minute < tempo_final_de_chegada ; i++){
+	for(int i=0; i<= 200/*simulator.mr_pop_mr*/ && simulator.minute < tempo_final_de_chegada ; i++){
 						if(pthread_create((&t_cliente), NULL,(void *)&f_cliente,NULL) != 0) {
 														printf("Error creating thread\n");
 														exit(1);
