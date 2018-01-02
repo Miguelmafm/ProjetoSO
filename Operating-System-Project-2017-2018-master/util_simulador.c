@@ -50,6 +50,7 @@ int * read_method(int numberargs, char file_selected[50]){
 																else if(!strcmp("perc_des_cl_normal",param)) retorna[13] = value;
 																else if(!strcmp("per_des_cl_vip",param)) retorna[14] = value;
 																else if(!strcmp("per_des_cl_vipf",param)) retorna[15] = value;
+																else if(!strcmp("mr_pop_mr",param)) retorna[16] = value;
 																else{
 																								printf("Error: %s Not a valid configuration setting\n", param);
 																								return 0;
