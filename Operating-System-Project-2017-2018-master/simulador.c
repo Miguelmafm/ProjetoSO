@@ -64,6 +64,7 @@ time_t t_inicial, t_agora;
 pthread_t t_cliente;
 pthread_t t_colaborador;
 pthread_t t_montanha_russa;
+pthread_t t_mecanico;
 
 
 pthread_t t_bilheteira;
@@ -84,7 +85,7 @@ sem_t s_end_tobogan;
 sem_t s_mid_tobogan;
 pthread_mutex_t t_tobogan;
 pthread_mutex_t t_comunicate;*/
-sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_cap_carro1, s_cap_carro2, s_viagem_mr, s_inicia_viagem, s_terminou_viagem;
+sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_cap_carro1, s_cap_carro2, s_viagem_mr, s_inicia_viagem, s_terminou_viagem, s_avaria, s_reparacao_feita;
 pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto, trinco_comunicate;
 
 /*********************************** Functions *******************************************/
@@ -97,101 +98,184 @@ pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, tr
 int * bilheteira(){
 
 time(&t_inicial);
+int vai_terminar=1;
 
 								while(m_russa_open) {
-																if(((simulator.mr_fim)-30) <= simulator.minute) {
+																if(((simulator.mr_fim)-30) <= simulator.minute && vai_terminar) {
 																	pthread_mutex_lock(&trinco_comunicate);
 																	send_message(newsockfd,simulator.minute,90,1);
 																	printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
+
 																	pthread_mutex_unlock(&trinco_comunicate);
+																	vai_terminar=0;
 
 
 																								//attraction_open=0;
 																}
 																time(&t_agora);
-																simulator.minute=difftime(t_agora,t_inicial);
+																simulator.minute=(difftime(t_agora,t_inicial)+1200); // a inicializar as 20horas
+																																										//1200 minutos = 20 horas
 
 
 								}
 							}
-
-
 void *f_cliente (){ //funcao thread clientes
 
+int tempo_chegada_ext=simulator.minute;
+int diferenca_tempo=0;
+int desistencia=0;
 int id_cliente=0;
 int random=0;
+int random_desistecia=0;
 int tipo; //0-> Vip_Frente
 					//1-> VIP
 					//2 -> Normal
-sem_wait (&s_recinto); //semaforo recinto (0,60)
 
-	pthread_mutex_lock(&trinco_recinto);
-		id_cliente=total_clientes ++;
-		total_clientes_recinto++;
-		random=rand()%100+1;
-	pthread_mutex_unlock(&trinco_recinto);
+//semafro começa a 0 controlado pela t_bilheteira         total_clientes_recinto
 
-	if (random<=simulator.perc_cl_vip_frente){   //Cliente Vip_Frente;
-		tipo=0;
-	} else if  (random<=(simulator.perc_cl_vip+simulator.perc_cl_vip_frente) && random>simulator.perc_cl_vip_frente){
-		tipo=1;
-	} else {
-		tipo=2;
-	}
 
-switch(tipo){
-	case 0:
 
-pthread_mutex_lock(&trinco_vip_frente);
-			vip_frente++;
-			send_message(newsockfd,simulator.minute,13,id_cliente);
-			printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
-pthread_mutex_unlock(&trinco_vip_frente);
+//if(!desistir)
 
-sem_wait (&s_vip_frente);
-pthread_mutex_lock(&trinco_vip_frente);
-			printf(" O cliente VIP_FRENTE com o id %d entrou na MONTANHA Russa\n",id_cliente );
-			send_message(newsockfd,simulator.minute,16,id_cliente);
-pthread_mutex_unlock(&trinco_vip_frente);
-			break;
+	sem_wait (&s_recinto); //semaforo recinto (0,60)
 
-	case 1:
-pthread_mutex_lock(&trinco_vip);
-			vip++;
-		  send_message(newsockfd,simulator.minute,12,id_cliente);
-			printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
-pthread_mutex_unlock(&trinco_vip);
+	int tempo_chegada_int=simulator.minute;
 
-sem_wait (&s_vip);
-pthread_mutex_lock(&trinco_vip);
-			send_message(newsockfd,simulator.minute,15,id_cliente);
-			printf(" Cliente vip com id %d entrou na montanha russa \n",id_cliente );
-pthread_mutex_unlock(&trinco_vip);
-			break;
 
-	case 2:
-pthread_mutex_lock(&trinco_normal);
-			normal++;
-			printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
-			send_message(newsockfd,simulator.minute,11,id_cliente);
-pthread_mutex_unlock(&trinco_normal);
+		pthread_mutex_lock(&trinco_recinto);
+			id_cliente=total_clientes ++;
+			total_clientes_recinto++;
+			random=rand()%100+1;
+			random_desistecia=rand()%100+1;
+		pthread_mutex_unlock(&trinco_recinto);
 
-sem_wait (&s_normal);
-pthread_mutex_lock(&trinco_normal);
-			send_message(newsockfd,simulator.minute,14,id_cliente);
-			printf(" Cliente normal com id %d entrou na montanha russa \n",id_cliente );
-pthread_mutex_unlock(&trinco_normal);
-				break;
+		if (random<=simulator.perc_cl_vip_frente){   //Cliente Vip_Frente;
+			tipo=0;
+		} else if  (random<=(simulator.perc_cl_vip+simulator.perc_cl_vip_frente) && random>simulator.perc_cl_vip_frente){
+			tipo=1;
+		} else {
+			tipo=2;
+		}
+
+	switch(tipo){
+		case 0:
+
+	pthread_mutex_lock(&trinco_vip_frente);
+				vip_frente++;
+				send_message(newsockfd,simulator.minute,13,id_cliente);
+				printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
+	pthread_mutex_unlock(&trinco_vip_frente);
+
+
+	sem_wait (&s_vip_frente);
+	diferenca_tempo= difftime(simulator.minute,tempo_chegada_int);
+
+	if( 10 <= diferenca_tempo && random_desistecia <= simulator.per_des_cl_vipf ){
+		pthread_mutex_lock(&trinco_vip_frente);
+					printf(" O cliente VIP_FRENTE com o id %d Desistiu da MONTANHA Russa\n",id_cliente );
+					send_message(newsockfd,simulator.minute,54,id_cliente);
+					desistencia=1;
+		pthread_mutex_unlock(&trinco_vip_frente);
+
+
+		}
+
+else{
+	pthread_mutex_lock(&trinco_vip_frente);
+				printf(" O cliente VIP_FRENTE com o id %d entrou na MONTANHA Russa\n",id_cliente );
+				send_message(newsockfd,simulator.minute,16,id_cliente);
+				desistencia=0;
+	pthread_mutex_unlock(&trinco_vip_frente);
+
+
 			}
+break;
 
-sem_wait (&s_viagem_mr);
+		case 1:
+	pthread_mutex_lock(&trinco_vip);
+				vip++;
+			  send_message(newsockfd,simulator.minute,12,id_cliente);
+				printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
+	pthread_mutex_unlock(&trinco_vip);
 
-pthread_mutex_lock(&trinco_sai_recinto);
-total_clientes_recinto--;
-printf(" O cliente com ID %d , e o tipo %d saiu do recinto\n",id_cliente, tipo);
-send_message(newsockfd,simulator.minute,32,id_cliente);
-pthread_mutex_unlock(&trinco_sai_recinto);
-sem_post (&s_recinto);
+	sem_wait (&s_vip);
+
+	diferenca_tempo= difftime(simulator.minute,tempo_chegada_int);
+
+	if( 13 <= diferenca_tempo && random_desistecia <= simulator.per_des_cl_vip ){
+		pthread_mutex_lock(&trinco_vip_frente);
+					printf(" O cliente VIP_FRENTE com o id %d Desistiu da MONTANHA Russa\n",id_cliente );
+					send_message(newsockfd,simulator.minute,54,id_cliente);
+					desistencia=1;
+		pthread_mutex_unlock(&trinco_vip_frente);
+}
+
+
+else{
+	pthread_mutex_lock(&trinco_vip);
+				send_message(newsockfd,simulator.minute,15,id_cliente);
+				printf(" Cliente vip com id %d entrou na montanha russa \n",id_cliente );
+	pthread_mutex_unlock(&trinco_vip);
+
+}
+
+				break;
+
+		case 2:
+	pthread_mutex_lock(&trinco_normal);
+				normal++;
+				printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
+				send_message(newsockfd,simulator.minute,11,id_cliente);
+	pthread_mutex_unlock(&trinco_normal);
+
+	sem_wait (&s_normal);
+
+	if( 15 <= diferenca_tempo && random_desistecia <= simulator.perc_des_cl_normal ){
+		pthread_mutex_lock(&trinco_vip_frente);
+					printf(" O cliente VIP_FRENTE com o id %d Desistiu da MONTANHA Russa\n",id_cliente );
+					send_message(newsockfd,simulator.minute,54,id_cliente);
+					desistencia=1;
+		pthread_mutex_unlock(&trinco_vip_frente);}
+
+
+
+			else{
+						pthread_mutex_lock(&trinco_normal);
+							send_message(newsockfd,simulator.minute,14,id_cliente);
+							printf(" Cliente normal com id %d entrou na montanha russa \n",id_cliente );
+						pthread_mutex_unlock(&trinco_normal);
+}
+
+					break;
+				}
+
+
+
+
+				if(desistencia==1){
+					pthread_mutex_lock(&trinco_sai_recinto);
+					total_clientes_recinto--;
+					printf(" O cliente com ID %d , e o tipo %d saiu do recinto\n",id_cliente, tipo);
+					send_message(newsockfd,simulator.minute,32,id_cliente);
+					pthread_mutex_unlock(&trinco_sai_recinto);
+					sem_post (&s_recinto);
+				}
+
+	         else {
+					sem_wait (&s_viagem_mr);
+					pthread_mutex_lock(&trinco_sai_recinto);
+					total_clientes_recinto--;
+					printf(" O cliente com ID %d , e o tipo %d saiu do recinto\n",id_cliente, tipo);
+					send_message(newsockfd,simulator.minute,32,id_cliente);
+					pthread_mutex_unlock(&trinco_sai_recinto);
+					sem_post (&s_recinto);
+}
+
+//else
+{
+	//printf("O cliente desistiu");
+	//desistencia ++;
+}
 }
 
 
@@ -313,12 +397,56 @@ void *f_montanha_russa (){ //funcao thread montanha russa
 while (1){
 
 	sem_wait (&s_inicia_viagem);   //Espera que os carros encham
-
+	int random_avaria=0;
+	random_avaria=rand()%100+1;
 	printf("A viagem iniciou \n");
 
 	pthread_mutex_lock(&trinco_comunicate);
 	send_message(newsockfd,simulator.minute,61,1);
 	pthread_mutex_unlock(&trinco_comunicate);
+
+	usleep (2000000);//para simular avaria na viagem
+
+
+	if(random_avaria>=simulator.perc_avaria){ //Avaria
+
+		printf("Ocorreu uma Avaria\n");
+
+		pthread_mutex_lock(&trinco_comunicate);
+		send_message(newsockfd,simulator.minute,71,1);
+		pthread_mutex_unlock(&trinco_comunicate);
+
+		usleep (500000);
+		printf("A montanha russa parou devido a uma avaria\n");
+
+	  pthread_mutex_lock(&trinco_comunicate);
+	  send_message(newsockfd,simulator.minute,62,1);
+	  pthread_mutex_unlock(&trinco_comunicate);
+
+
+		usleep (5000000);
+
+		printf("O mecanico desloca-se para a montanha russa\n");
+
+		pthread_mutex_lock(&trinco_comunicate);
+		send_message(newsockfd,simulator.minute,81,1);
+		pthread_mutex_unlock(&trinco_comunicate);
+
+		usleep (5000000);
+
+		sem_post (&s_avaria);
+		sem_wait (&s_reparacao_feita);
+
+		printf("A montanha russa retomou apos avaria\n");
+
+		pthread_mutex_lock(&trinco_comunicate);
+		send_message(newsockfd,simulator.minute,63,1);
+		pthread_mutex_unlock(&trinco_comunicate);
+
+
+	}
+
+
 
 	usleep (4000000);
 
@@ -348,6 +476,47 @@ while (1){
  	sem_post (&s_terminou_viagem);
 }
 }
+
+
+void *f_mecanico (){ //funcao thread mecanico
+
+while (1) {
+
+
+
+		sem_wait (&s_avaria);
+		int random_reparacao=0;
+		random_reparacao=rand()%100+1;
+
+
+		printf("O mecanico deu inicio a reparacao da Montanha Russa\n" );
+
+		pthread_mutex_lock(&trinco_comunicate);
+		send_message(newsockfd,simulator.minute,82,1);
+		pthread_mutex_unlock(&trinco_comunicate);
+
+		if(random_reparacao>50){
+		usleep(900000);
+
+				}else{  usleep(1200000);
+}
+		printf("O mecanico conclui com sucesso a reparacao\n" );
+
+		pthread_mutex_lock(&trinco_comunicate);
+		send_message(newsockfd,simulator.minute,83,1);
+		pthread_mutex_unlock(&trinco_comunicate);
+
+		sem_post(&s_reparacao_feita);
+
+}}
+
+
+
+
+
+
+
+
 
 int c_cliente(){
 	int n_clientes = 0;
@@ -418,6 +587,12 @@ int main(int argc, char **argv){
 								sem_init(&s_viagem_mr,0,0);
 								sem_init(&s_inicia_viagem,0,0);
 								sem_init(&s_terminou_viagem,0,0);
+								sem_init(&s_avaria,0,0);
+								sem_init(&s_reparacao_feita,0,0);
+
+
+
+
 
 
 
@@ -488,6 +663,11 @@ int main(int argc, char **argv){
 								if(pthread_create((&t_montanha_russa), NULL,(void *)&f_montanha_russa,NULL) != 0) {
 																								printf("Error creating thread\n");
 																								exit(1);}
+
+
+								if(pthread_create((&t_mecanico), NULL,(void *)&f_mecanico,NULL) != 0) {
+																						   printf("Error creating thread\n");
+																							 exit(1);}
 
 
 

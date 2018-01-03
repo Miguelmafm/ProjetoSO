@@ -9,7 +9,7 @@
 #include "unix.h"
 
 char * make_hours(int input){
-								int hr = 20;
+								int hr = 0;
 								int min = 0;
 								static char string[5];
 								while(input>0) {
