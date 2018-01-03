@@ -483,7 +483,7 @@ int write_log(int hour, int state, int client_id){
 										case 32: fprintf(file_log,"[%s] ⚫ Cliente %d saiu do recinto da Montanha Russa.\n", make_hours(hour), client_id); break;
 
 										case 41: fprintf(file_log,"[%s] * Colaborador esta a verificar os cintos de seguranca.\n", make_hours(hour)); break;
-										case 42: fprintf(file_log,"[%s] * Cintos de seguranca verificados com sucesso.\n", make_hours(hour)); break;
+										case 42: fprintf(file_log,"[%s] * Colaborador esta a retirar os cintos de seguranca.\n", make_hours(hour)); break;
 
 										case 51: fprintf(file_log,"[%s] ⚫ Cliente %d desistiu da Montanha Russa.\n", make_hours(hour), client_id); break;
 										case 52: fprintf(file_log,"[%s] ⚫ Cliente normal %d desistiu da Montanha Russa.\n", make_hours(hour), client_id); break;
@@ -578,8 +578,8 @@ void write_decoder(int hour, int state, int client_id) {
 								case 31: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s saiu da carruagem                                │\n", three_digit_number(client_id)); break;
 								case 32: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s saiu do recinto da Montanha Russa                │\n", three_digit_number(client_id)); break;
 
-								case 41: printf("   │  [%s] * Colaborador está a verificar os cintos de seguranca          │\n", make_hours(hour)); break;
-								case 42: printf("   │  [%s] * Cintos de seguranca verificados com sucesso                  │\n", make_hours(hour)); break;
+								case 41: printf("   │  [%s] * Colaborador esta a verificar os cintos de seguranca          │\n", make_hours(hour)); break;
+								case 42: printf("   │  [%s] * Colaborador esta a retirar os cintos de seguranca            │\n", make_hours(hour)); break;
 
 								case 51: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s desistiu da Montanha Russa                       │\n", three_digit_number(client_id)); break;
 								case 52: printf("   │  [%s] ⚫ Cliente Normal",make_hours(hour)); printf(" %s desistiu da Montanha Russa                │\n", three_digit_number(client_id)); break;
@@ -597,6 +597,7 @@ void write_decoder(int hour, int state, int client_id) {
 								case 82: printf("   │  [%s] ➤ O mecanico deu inicio a reparacao da Montanha Russa          │\n", make_hours(hour)); break;
 								case 83: printf("   │  [%s] ➤ O mecanico concluiu com sucesso a reparacao                  │\n", make_hours(hour)); break;
 
+								case 90: printf("    │  [%s] ⛬ A montanha russa encerra em 30 minutos                       │\n", make_hours(hour)); break;
 								case 100: printf("   │  [%s] ⛬ Simulacao iniciada                                           │\n", make_hours(hour)); break;
 								case 101: printf("   │  [%s] ⛬ Simulacao terminada                                          │\n", make_hours(hour)); break;
 								case -1: printf("   │                                                                         │\n"); break;
@@ -637,7 +638,7 @@ void creat_graph(/*int aqua, int pool, int race, int race_status, int tobogan, i
 																																mister_cheat = 0;
 																								}else{
 																																mister_cheat++;
-																								}qweqwe
+																								}
 																}
 								}else if(mister_cheat != 0 ) {
 																mister_cheat--;
@@ -681,14 +682,14 @@ void creat_stats (){
 								printf("   │   │   Total clientes na fila interior              :          %s   │   │\n",three_digit_number(number_counter(&*inicio_tobo,2)));
 								printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 								printf("   │   ■─[ Desistencias ]────────────────────────────────────────────────┐   │\n");
-								printf("   │   │   Desistências na fila exterior                :          %s   │   │\n",three_digit_number(drop_counter(&*inicio_mr_ext)); // feito
-								printf("   │   │   Desistências na fila interior                :          %s   │   │\n",three_digit_number(drop_counter(&*inicio_aqua)));
+								printf("   │   │   Desistências na fila exterior                :          %s   │   │\n",three_digit_number(drop_counter(&*inicio_mr_ext))); // feito
+								printf("   │   │   Desistências na fila interior                :          %s   │   │\n",three_digit_number(drop_counter(&*inicio_mr_ext)));
 								printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 								printf("   │   ■─[ Tempos médios de espera ]─────────────────────────────────────┐   │\n");
 								printf("   │   │   Tempo médio na fila exterior                 :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_mr_ext)));
-								printf("   │   │   Tempo médio espera no recinto (VIP Frente)   :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_aqua)));
-								printf("   │   │   Tempo médio espera no recinto (VIP)          :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_aqua)));
-								printf("   │   │   Tempo médio espera no recinto (Normal)       :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_aqua)));
+								printf("   │   │   Tempo médio espera no recinto (VIP Frente)   :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_mr_ext)));
+								printf("   │   │   Tempo médio espera no recinto (VIP)          :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_mr_ext)));
+								printf("   │   │   Tempo médio espera no recinto (Normal)       :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_mr_ext)));
 								printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 								printf("   │   ■─[ Tempos máximo ]───────────────────────────────────────────────┐   │\n");
 								printf("   │   │   Tempo máximo no recinto                      :        %s   │   │\n",make_hours(max_time(&*inicio_mr_ext)));
@@ -697,8 +698,8 @@ void creat_stats (){
 								printf("   │   │   Tempo máximo na fila interior (Normal)       :        %s   │   │\n",make_hours(max_time(&*inicio_tobo)));
 								printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 								printf("   │   ■─[ Avarias ]─────────────────────────────────────────────────────┐   │\n");
-								printf("   │   │   Tempo médio de reparação de avarias          :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_aqua)));
-								printf("   │   │   Número total de avarias                      :          %s   │   │\n",three_digit_number(number_counter(&*inicio_aqua));
+								printf("   │   │   Tempo médio de reparação de avarias          :        %s   │   │\n",make_hours(calc_stat_average(&*inicio_mr_ext)));
+								printf("   │   │   Número total de avarias                      :          %s   │   │\n",make_hours(calc_stat_average(&*inicio_mr_ext)));
 								printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 }
 
