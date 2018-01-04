@@ -501,7 +501,8 @@ int write_log(int hour, int state, int client_id){
 										case 82: fprintf(file_log,"[%s] ➤ O mecanico deu inicio a reparacao da Montanha Russa.\n", make_hours(hour)); break;
 										case 83: fprintf(file_log,"[%s] ➤ O mecanico concluiu com sucesso a reparacao.\n", make_hours(hour)); break;
 
-										case 90: fprintf(file_log,"[%s] ⛬ O Colaborador foi para casa descansar.\n", make_hours(hour)); break;
+										case 90: printf("[%s] ⛬ A montanha russa encerra em 30 minutos.\n", make_hours(hour)); break;
+										case 92: fprintf(file_log,"[%s] ⛬ O Colaborador foi para casa descansar.\n", make_hours(hour)); break;
 
 										case 100: fprintf(file_log,"[%s] ⛬ Simulacao iniciada.\n", make_hours(hour)); break;
 										case 101: fprintf(file_log,"[%s] ⛬ Simulacao terminada.\n", make_hours(hour)); break;
@@ -599,7 +600,8 @@ void write_decoder(int hour, int state, int client_id) {
 								case 82: printf("   │  [%s] ➤ O mecanico deu inicio a reparacao da Montanha Russa          │\n", make_hours(hour)); break;
 								case 83: printf("   │  [%s] ➤ O mecanico concluiu com sucesso a reparacao                  │\n", make_hours(hour)); break;
 
-								case 90: printf("    │  [%s] ⛬ A montanha russa encerra em 30 minutos                       │\n", make_hours(hour)); break;
+								case 90: printf("   │  [%s] ⛬ A montanha russa encerra em 30 minutos                       │\n", make_hours(hour)); break;
+								case 92: printf("   │  [%s] ⛬ O Colaborador foi para casa descansar                        │\n", make_hours(hour)); break;
 								case 100: printf("   │  [%s] ⛬ Simulacao iniciada                                           │\n", make_hours(hour)); break;
 								case 101: printf("   │  [%s] ⛬ Simulacao terminada                                          │\n", make_hours(hour)); break;
 								case -1: printf("   │                                                                         │\n"); break;

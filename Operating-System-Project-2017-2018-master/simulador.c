@@ -71,7 +71,7 @@ pthread_t t_mecanico;
 pthread_t t_bilheteira;
 
 sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_cap_carro1, s_cap_carro2, s_viagem_mr, s_inicia_viagem, s_terminou_viagem, s_avaria, s_reparacao_feita;
-pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto, trinco_comunicate, trinco_id_cliente, trinco_tipo_cliente, trinco_desistencia, trinco_sai_recinto_ext;
+pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto, trinco_comunicate, trinco_id_cliente, trinco_tipo_cliente, trinco_desistencia, trinco_sai_recinto_ext, trinco_fecha_bilheteira;
 
 /*********************************** Functions *******************************************/
 
@@ -87,11 +87,10 @@ int vai_terminar=1;
 
 								while(m_russa_open) {
 																if(((simulator.mr_fim)-30) <= simulator.minute && vai_terminar) {
-																	pthread_mutex_lock(&trinco_comunicate);
+																	pthread_mutex_lock(&trinco_fecha_bilheteira);
 																	send_message(newsockfd,simulator.minute,90,1);
 																	printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
-
-																	pthread_mutex_unlock(&trinco_comunicate);
+																	pthread_mutex_unlock(&trinco_fecha_bilheteira);
 																	vai_terminar=0;
 																	bilh_open=0;
 																	}
@@ -435,7 +434,7 @@ pthread_mutex_unlock(&trinco_comunicate);
 }
 
 
-
+ printf("VARIALVEL M_RUssa_OPEN = %d\n",m_russa_open );
 			if(m_russa_open){
 							printf("O Colaborador esta a verificar os cintos de seguranca \n" );
 							usleep(200000);
@@ -458,7 +457,7 @@ pthread_mutex_unlock(&trinco_comunicate);
 					}
 
 					pthread_mutex_lock(&trinco_comunicate);
-					send_message(newsockfd,simulator.minute,90,1);
+					send_message(newsockfd,simulator.minute,92,1);
 					pthread_mutex_unlock(&trinco_comunicate);
 					printf("O Colaborador foi para casa descansar!!!!! \n");
 				}
@@ -684,6 +683,7 @@ int main(int argc, char **argv){
 								pthread_mutex_init(&trinco_id_cliente,NULL);
 								pthread_mutex_init(&trinco_tipo_cliente,NULL);
 								pthread_mutex_init(&trinco_desistencia,NULL);
+								pthread_mutex_init(&trinco_fecha_bilheteira,NULL);
 
 
 
