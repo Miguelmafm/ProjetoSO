@@ -71,7 +71,7 @@ pthread_t t_mecanico;
 pthread_t t_bilheteira;
 
 sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_cap_carro1, s_cap_carro2, s_viagem_mr, s_inicia_viagem, s_terminou_viagem, s_avaria, s_reparacao_feita;
-pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto, trinco_comunicate, trinco_id_cliente;
+pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto, trinco_comunicate, trinco_id_cliente, trinco_tipo_cliente, trinco_desistencia, trinco_sai_recinto_ext, trinco_fecha_bilheteira;
 
 /*********************************** Functions *******************************************/
 
@@ -87,11 +87,10 @@ int vai_terminar=1;
 
 								while(m_russa_open) {
 																if(((simulator.mr_fim)-30) <= simulator.minute && vai_terminar) {
-																	pthread_mutex_lock(&trinco_comunicate);
+																	pthread_mutex_lock(&trinco_fecha_bilheteira);
 																	send_message(newsockfd,simulator.minute,90,1);
 																	printf("[%s] A montanha russa fecha em 30 minutos!\n", make_hours(simulator.minute));
-
-																	pthread_mutex_unlock(&trinco_comunicate);
+																	pthread_mutex_unlock(&trinco_fecha_bilheteira);
 																	vai_terminar=0;
 																	bilh_open=0;
 																	}
@@ -127,9 +126,11 @@ pthread_mutex_unlock(&trinco_id_cliente);
 
 //if(!desistir)
 
-	sem_wait (&s_recinto); //semaforo recinto (0,60)
-	if(bilh_open){
 
+
+		sem_wait (&s_recinto); //semaforo recinto (0,60)
+
+if(bilh_open){
 
 
 	int tempo_chegada_int=simulator.minute;
@@ -140,6 +141,7 @@ pthread_mutex_unlock(&trinco_id_cliente);
 			random_desistecia=rand()%100+1;
 		pthread_mutex_unlock(&trinco_recinto);
 
+	pthread_mutex_lock(&trinco_tipo_cliente);
 		if (random<=simulator.perc_cl_vip_frente){   //Cliente Vip_Frente;
 			tipo=0;
 		} else if  (random<=(simulator.perc_cl_vip+simulator.perc_cl_vip_frente) && random>simulator.perc_cl_vip_frente){
@@ -147,7 +149,7 @@ pthread_mutex_unlock(&trinco_id_cliente);
 		} else {
 			tipo=2;
 		}
-
+	pthread_mutex_unlock(&trinco_tipo_cliente);
 	switch(tipo){
 		case 0:
 
@@ -196,20 +198,22 @@ break;
 	pthread_mutex_lock(&trinco_vip);
 
 			  send_message(newsockfd,simulator.minute,12,id_cliente);
-			//	printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
+				//printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
 	pthread_mutex_unlock(&trinco_vip);
 
 
 
-pthread_mutex_lock(&trinco_vip);
-	diferenca_tempo= difftime(simulator.minute,tempo_chegada_int);
+		pthread_mutex_lock(&trinco_desistencia);
+
+					diferenca_tempo= difftime(simulator.minute,tempo_chegada_int);
+		pthread_mutex_unlock(&trinco_desistencia);
 
 	if(  random_desistecia <= simulator.per_des_cl_vip || diferenca_tempo>35 ){
 				usleep(1000000);
-				//printf(" O cliente VIP com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
+				printf(" O cliente VIP com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
 					send_message(newsockfd,simulator.minute,53,id_cliente);
 					desistencia=1;
-	pthread_mutex_unlock(&trinco_vip);
+
 }else{
 	pthread_mutex_lock(&trinco_vip);
 		vip++;
@@ -291,16 +295,20 @@ pthread_mutex_lock(&trinco_vip);
 						total_clientes_recinto--;
 						printf(" O cliente com ID %d , e o tipo %d saiu do recinto\n",id_cliente, tipo);
 						send_message(newsockfd,simulator.minute,32,id_cliente);
+						sem_post (&s_recinto);
 					pthread_mutex_unlock(&trinco_sai_recinto);
-					sem_post (&s_recinto);
+
 }}
 	else{
 			//DESISTIU FORA DO RECINTO
-					pthread_mutex_lock(&trinco_sai_recinto);
+					pthread_mutex_lock(&trinco_sai_recinto_ext);
 					numero_total_desistencias_ext++;
-					printf(" O cliente com ID %d ,saiu do recinto pois a Bilheteira fechou\n",id_cliente);
+					printf(" O cliente com ID %d ,desistiu pois a Bilheteira fechou\n",id_cliente);
 					send_message(newsockfd,simulator.minute,51,id_cliente);
-					pthread_mutex_unlock(&trinco_sai_recinto);
+						sem_post (&s_recinto);
+						usleep(100000);
+					pthread_mutex_unlock(&trinco_sai_recinto_ext);
+
 
 
 
@@ -330,7 +338,7 @@ while (m_russa_open){
 	pthread_mutex_unlock(&trinco_carro2);
 
 	time(&t_espera);
-while(carro1<simulator.cap_carro1 && espera){
+while(carro1<simulator.cap_carro1 && espera && m_russa_open){
 
 	if(vip_frente > 0){
 		sem_post (&s_vip_frente);
@@ -385,7 +393,7 @@ send_message(newsockfd,simulator.minute,21,1);
 pthread_mutex_unlock(&trinco_comunicate);
 }
 
-while(carro2<simulator.cap_carro2 && espera){
+while(carro2<simulator.cap_carro2 && espera && m_russa_open){
 
 					if(vip>0) {
 								sem_post (&s_vip);
@@ -426,9 +434,8 @@ pthread_mutex_unlock(&trinco_comunicate);
 }
 
 
-
-
-
+ printf("VARIALVEL M_RUssa_OPEN = %d\n",m_russa_open );
+			if(m_russa_open){
 							printf("O Colaborador esta a verificar os cintos de seguranca \n" );
 							usleep(200000);
 							pthread_mutex_lock(&trinco_comunicate);
@@ -441,12 +448,18 @@ pthread_mutex_unlock(&trinco_comunicate);
 
 
 							sem_post (&s_inicia_viagem); //vai iniciar a primeira viagem
+								clientes_no_caro=carro1+carro2;
 
 							sem_wait (&s_terminou_viagem);  //Espera que a volta da montanha russa termine
 
-
+						}
 
 					}
+
+					pthread_mutex_lock(&trinco_comunicate);
+					send_message(newsockfd,simulator.minute,92,1);
+					pthread_mutex_unlock(&trinco_comunicate);
+					printf("O Colaborador foi para casa descansar!!!!! \n");
 				}
 
 
@@ -665,8 +678,14 @@ int main(int argc, char **argv){
 								pthread_mutex_init(&trinco_carro1,NULL);
 								pthread_mutex_init(&trinco_carro2,NULL);
 								pthread_mutex_init(&trinco_sai_recinto,NULL);
+								pthread_mutex_init(&trinco_sai_recinto_ext,NULL);
 								pthread_mutex_init(&trinco_comunicate,NULL);
 								pthread_mutex_init(&trinco_id_cliente,NULL);
+								pthread_mutex_init(&trinco_tipo_cliente,NULL);
+								pthread_mutex_init(&trinco_desistencia,NULL);
+								pthread_mutex_init(&trinco_fecha_bilheteira,NULL);
+
+
 
 
 
@@ -739,7 +758,7 @@ int main(int argc, char **argv){
 								while((total_clientes_recinto && bilh_open==1 )||total_clientes_recinto){
 									m_russa_open=1;			//fim
 									printf(" total clientes recinto:%d\n",total_clientes_recinto);
-									usleep(2000000);
+									usleep(6000000);
 								}
 								m_russa_open=0;			//fim
 
