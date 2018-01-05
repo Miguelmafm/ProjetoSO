@@ -99,7 +99,7 @@ int * bilheteira(){
 			bilh_open=0;
 			printf("externos: %d \n", numero_externos );
 			for(int j = 0; j < numero_externos; j++){
-					printf("BAZEM PORCOS!!\n" );
+				printf("BAZEM PORCOS!!\n" );
 				sem_post(&s_recinto);
 			}
 		}
@@ -117,7 +117,7 @@ void *f_cliente (){ //funcao thread clientes
 
 	time_t	t_chegada_int, t_chegada_ext, t_agora_int,t_agora_ext;
 	time(&t_chegada_ext);
-//	int ola = simulator.minute;
+	//	int ola = simulator.minute;
 	int diferenca_tempo=0;
 	int desistencia=0;
 	int id_cliente=0;
@@ -126,7 +126,7 @@ void *f_cliente (){ //funcao thread clientes
 	int tipo;
 	int cliente_chegou = 0;
 	int cliente_desiste = 30;
- 	//0-> Vip_Frente
+	//0-> Vip_Frente
 	//1-> VIP
 	//2 -> Normal
 
@@ -148,12 +148,16 @@ void *f_cliente (){ //funcao thread clientes
 	time(&t_agora_ext);
 
 	diferenca_tempo= difftime(t_agora_ext,t_chegada_ext);
-//	printf(" tempo atual: %d \n",t_agora_ext );
-//	printf(" tempo chegada cliente: %d \n",t_chegada_ext );
+	//	printf(" tempo atual: %d \n",t_agora_ext );
+	//	printf(" tempo chegada cliente: %d \n",t_chegada_ext );
 	//printf(" dif tempo cliente: %d \n",diferenca_tempo );
 	pthread_mutex_unlock(&trinco_desistencia);
 
-	if(bilh_open && diferenca_tempo <= 30){
+	pthread_mutex_lock(&trinco_recinto);
+	random_desistecia=rand()%100+1;
+	pthread_mutex_unlock(&trinco_recinto);
+
+	if(bilh_open && !(random_desistecia <= simulator.perc_des_fila_ext)){
 
 
 		time(&t_chegada_int);
@@ -176,137 +180,137 @@ void *f_cliente (){ //funcao thread clientes
 		switch(tipo){
 			case 0:
 
+			pthread_mutex_lock(&trinco_vip_frente);
+		//	printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
+			send_message(newsockfd,simulator.minute,13,id_cliente);
+			vip_frente++;
+			numero_externos--;
+			printf("externos: %d \n", numero_externos );
+			usleep(100000);
+			pthread_mutex_unlock(&trinco_vip_frente);
+
+			pthread_mutex_lock(&trinco_sai_recinto);
+			total_clientes_recinto++;
+			pthread_mutex_unlock(&trinco_sai_recinto);
+
+
+
+			//semafro fim viagem
+			pthread_mutex_lock(&trinco_desistencia);
+			time(&t_agora_int);
+			diferenca_tempo= difftime(t_agora_int,t_chegada_int);
+			//	printf(" tempo atual: %d \n",t_agora_int );
+			//printf(" tempo chegada VIP_frente: %d \n",t_chegada_int );
+			//printf(" dif tempo VIP_frente: %d \n",diferenca_tempo );
+			pthread_mutex_unlock(&trinco_desistencia);
+
+			if( random_desistecia <= simulator.per_des_cl_vipf || diferenca_tempo>25){
 				pthread_mutex_lock(&trinco_vip_frente);
-				printf(" O cliente VIP_FRENTE com o id %d entrou no recinto\n",id_cliente );
-				send_message(newsockfd,simulator.minute,13,id_cliente);
-				vip_frente++;
-				numero_externos--;
-					printf("externos: %d \n", numero_externos );
+				printf(" O cliente VIP_FRENTE com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
+				send_message(newsockfd,simulator.minute,54,id_cliente);
 				usleep(100000);
+				desistencia=1;
+				vip_frente--;
+				printf("externos: %d \n", numero_externos );
 				pthread_mutex_unlock(&trinco_vip_frente);
 
-				pthread_mutex_lock(&trinco_sai_recinto);
-				total_clientes_recinto++;
-				pthread_mutex_unlock(&trinco_sai_recinto);
+			}else{
+				sem_wait (&s_vip_frente);
 
+				pthread_mutex_lock(&trinco_comunicate);
+				printf(" O cliente VIP_FRENTE com o id %d entrou na carruagem\n",id_cliente );
+				send_message(newsockfd,simulator.minute,16,id_cliente);
+				usleep(100000);
+				pthread_mutex_unlock(&trinco_comunicate);
 
-
-				//semafro fim viagem
-				pthread_mutex_lock(&trinco_desistencia);
-				time(&t_agora_int);
-				diferenca_tempo= difftime(t_agora_int,t_chegada_int);
-			//	printf(" tempo atual: %d \n",t_agora_int );
-				//printf(" tempo chegada VIP_frente: %d \n",t_chegada_int );
-				//printf(" dif tempo VIP_frente: %d \n",diferenca_tempo );
-				pthread_mutex_unlock(&trinco_desistencia);
-
-				if( random_desistecia <= simulator.per_des_cl_vipf || diferenca_tempo>25){
-					pthread_mutex_lock(&trinco_vip_frente);
-					printf(" O cliente VIP_FRENTE com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
-					send_message(newsockfd,simulator.minute,54,id_cliente);
-					usleep(100000);
-					desistencia=1;
-					vip_frente--;
-						printf("externos: %d \n", numero_externos );
-					pthread_mutex_unlock(&trinco_vip_frente);
-
-				}else{
-					sem_wait (&s_vip_frente);
-
-					pthread_mutex_lock(&trinco_comunicate);
-					printf(" O cliente VIP_FRENTE com o id %d entrou na carruagem\n",id_cliente );
-					send_message(newsockfd,simulator.minute,16,id_cliente);
-					usleep(100000);
-					pthread_mutex_unlock(&trinco_comunicate);
-
-				}
-				break;
+			}
+			break;
 
 			case 1:
+			pthread_mutex_lock(&trinco_vip);
+		//	printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
+			send_message(newsockfd,simulator.minute,12,id_cliente);
+			vip++;
+			numero_externos--;
+			usleep(100000);
+			pthread_mutex_unlock(&trinco_vip);
+
+			pthread_mutex_lock(&trinco_sai_recinto);
+			total_clientes_recinto++;
+			pthread_mutex_unlock(&trinco_sai_recinto);
+
+
+
+			pthread_mutex_lock(&trinco_desistencia);
+			time(&t_agora_int);
+			diferenca_tempo= difftime(t_agora_int,t_chegada_int);
+			printf(" tempo atual: %d \n",t_agora_int );
+			printf(" tempo chegada VIP: %d \n",t_chegada_int );
+			printf(" dif tempo VIP: %d \n",diferenca_tempo );
+			pthread_mutex_unlock(&trinco_desistencia);
+
+			if(  random_desistecia <= simulator.per_des_cl_vip || diferenca_tempo>35 ){
 				pthread_mutex_lock(&trinco_vip);
-				printf(" O cliente VIP com o id %d entrou no recinto\n",id_cliente );
-				send_message(newsockfd,simulator.minute,12,id_cliente);
-				vip++;
-				numero_externos--;
+				printf(" O cliente VIP com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
+				send_message(newsockfd,simulator.minute,53,id_cliente);
 				usleep(100000);
+				desistencia=1;
+				vip--;
 				pthread_mutex_unlock(&trinco_vip);
+			}else{
+				sem_wait (&s_vip);
 
-				pthread_mutex_lock(&trinco_sai_recinto);
-				total_clientes_recinto++;
-				pthread_mutex_unlock(&trinco_sai_recinto);
+				pthread_mutex_lock(&trinco_comunicate);
+				printf(" Cliente VIP com id %d entrou na carruagem \n",id_cliente );
+				send_message(newsockfd,simulator.minute,15,id_cliente);
+				usleep(100000);
+				pthread_mutex_unlock(&trinco_comunicate);
 
-
-
-				pthread_mutex_lock(&trinco_desistencia);
-				time(&t_agora_int);
-				diferenca_tempo= difftime(t_agora_int,t_chegada_int);
-				printf(" tempo atual: %d \n",t_agora_int );
-				printf(" tempo chegada VIP: %d \n",t_chegada_int );
-				printf(" dif tempo VIP: %d \n",diferenca_tempo );
-				pthread_mutex_unlock(&trinco_desistencia);
-
-				if(  random_desistecia <= simulator.per_des_cl_vip || diferenca_tempo>35 ){
-					pthread_mutex_lock(&trinco_vip);
-					printf(" O cliente VIP com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
-					send_message(newsockfd,simulator.minute,53,id_cliente);
-					usleep(100000);
-					desistencia=1;
-					vip--;
-					pthread_mutex_unlock(&trinco_vip);
-				}else{
-					sem_wait (&s_vip);
-
-					pthread_mutex_lock(&trinco_comunicate);
-					printf(" Cliente VIP com id %d entrou na carruagem \n",id_cliente );
-					send_message(newsockfd,simulator.minute,15,id_cliente);
-					usleep(100000);
-					pthread_mutex_unlock(&trinco_comunicate);
-
-				}
-				break;
+			}
+			break;
 
 			case 2:
+			pthread_mutex_lock(&trinco_normal);
+		//	printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
+			send_message(newsockfd,simulator.minute,11,id_cliente);
+			normal++;
+			numero_externos--;
+			usleep(100000);
+			pthread_mutex_unlock(&trinco_normal);
+
+			pthread_mutex_lock(&trinco_sai_recinto);
+			total_clientes_recinto++;
+			pthread_mutex_unlock(&trinco_sai_recinto);
+
+
+
+			pthread_mutex_lock(&trinco_desistencia);
+			time(&t_agora_int);
+			diferenca_tempo= difftime(t_agora_int,t_chegada_int);
+			printf(" tempo atual: %d \n",t_agora_int );
+			printf(" tempo chegada normal: %d \n",t_chegada_int );
+			printf(" dif tempo normal: %d \n",diferenca_tempo );
+			pthread_mutex_unlock(&trinco_desistencia);
+
+
+			if( random_desistecia <= simulator.perc_des_cl_normal || diferenca_tempo>60){
 				pthread_mutex_lock(&trinco_normal);
-				printf(" O cliente NORMAL com o id %d entrou no recinto\n",id_cliente );
-				send_message(newsockfd,simulator.minute,11,id_cliente);
-				normal++;
-				numero_externos--;
+				printf(" O cliente NORMAL com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
+				send_message(newsockfd,simulator.minute,52,id_cliente);
 				usleep(100000);
+				desistencia=1;
+				normal--;
 				pthread_mutex_unlock(&trinco_normal);
+			}else{
+				sem_wait (&s_normal);
 
-				pthread_mutex_lock(&trinco_sai_recinto);
-				total_clientes_recinto++;
-				pthread_mutex_unlock(&trinco_sai_recinto);
-
-
-
-				pthread_mutex_lock(&trinco_desistencia);
-				time(&t_agora_int);
-				diferenca_tempo= difftime(t_agora_int,t_chegada_int);
-				printf(" tempo atual: %d \n",t_agora_int );
-				printf(" tempo chegada normal: %d \n",t_chegada_int );
-				printf(" dif tempo normal: %d \n",diferenca_tempo );
-				pthread_mutex_unlock(&trinco_desistencia);
-
-
-				if( random_desistecia <= simulator.perc_des_cl_normal || diferenca_tempo>60){
-					pthread_mutex_lock(&trinco_normal);
-					printf(" O cliente NORMAL com o id %d DEsIsTIU da MONTANHA Russa\n",id_cliente );
-					send_message(newsockfd,simulator.minute,52,id_cliente);
-					usleep(100000);
-					desistencia=1;
-					normal--;
-					pthread_mutex_unlock(&trinco_normal);
-				}else{
-					sem_wait (&s_normal);
-
-					pthread_mutex_lock(&trinco_comunicate);
-					printf(" Cliente NORMAL com id %d entrou na carruagem \n",id_cliente );
-					send_message(newsockfd,simulator.minute,14,id_cliente);
-					usleep(100000);
-					pthread_mutex_unlock(&trinco_comunicate);
-				}
-				break;
+				pthread_mutex_lock(&trinco_comunicate);
+				printf(" Cliente NORMAL com id %d entrou na carruagem \n",id_cliente );
+				send_message(newsockfd,simulator.minute,14,id_cliente);
+				usleep(100000);
+				pthread_mutex_unlock(&trinco_comunicate);
+			}
+			break;
 		}
 
 		if(desistencia==1){
@@ -346,8 +350,9 @@ void *f_cliente (){ //funcao thread clientes
 		//DESISTIU FORA DO RECINTO
 		pthread_mutex_lock(&trinco_sai_recinto_ext);
 		numero_total_desistencias_ext++;
-		printf(" O cliente com ID %d ,desistiu: Bilheteira fechou ou muito tempo na fila\n",id_cliente);
+	//	printf(" O cliente com ID %d ,desistiu: Bilheteira fechou ou muito tempo na fila\n",id_cliente);
 		send_message(newsockfd,simulator.minute,51,id_cliente);
+		sem_post(&s_recinto);
 		numero_externos--;
 		usleep(100000);
 		pthread_mutex_unlock(&trinco_sai_recinto_ext);
@@ -373,11 +378,11 @@ void *f_colaborador (){ //funcao thread colaborador
 		espera=1;
 		pthread_mutex_unlock(&trinco_carro2);
 
-		time(&t_espera);
+
 		while(carro1<simulator.cap_carro1 && espera && m_russa_open){
 
 			if(vip_frente > 0){
-				printf("Vip frente: %d\n",vip_frente);
+
 				sem_post (&s_vip_frente);
 				time(&t_espera);
 
@@ -389,7 +394,7 @@ void *f_colaborador (){ //funcao thread colaborador
 				pthread_mutex_unlock(&trinco_carro1);
 
 			}else if(vip > 0){
-				printf("Vip: %d\n",vip);
+
 				sem_post (&s_vip);
 				time(&t_espera);
 
@@ -401,7 +406,7 @@ void *f_colaborador (){ //funcao thread colaborador
 				pthread_mutex_unlock(&trinco_carro1);
 
 			}else if(normal > 0){
-				printf("Normal: %d\n",normal);
+
 				sem_post (&s_normal);
 				time(&t_espera);
 				pthread_mutex_lock(&trinco_normal);
@@ -434,7 +439,7 @@ void *f_colaborador (){ //funcao thread colaborador
 		while(carro2<simulator.cap_carro2 && espera && m_russa_open){
 
 			if(vip>0) {
-				printf("Vip: %d\n",vip);
+
 				sem_post (&s_vip);
 				time(&t_espera);
 				pthread_mutex_lock(&trinco_vip);
@@ -444,7 +449,7 @@ void *f_colaborador (){ //funcao thread colaborador
 				carro2++;
 				pthread_mutex_unlock(&trinco_carro2);
 			} else if(normal>0) {
-				printf("Normal: %d\n",normal);
+
 				sem_post (&s_normal);
 				time(&t_espera);
 				pthread_mutex_lock(&trinco_normal);
@@ -475,7 +480,7 @@ void *f_colaborador (){ //funcao thread colaborador
 		}
 
 		printf("VARIALVEL M_RUssa_OPEN = %d\n",m_russa_open );
-		if(m_russa_open && carro1 > 1){
+		if(m_russa_open && carro1+carro2 >= 1){
 
 			pthread_mutex_lock(&trinco_comunicate);
 			printf("O Colaborador esta a verificar os cintos de seguranca \n" );
@@ -520,7 +525,7 @@ void *f_montanha_russa (){ //funcao thread montanha russa
 		pthread_mutex_unlock(&trinco_comunicate);
 
 		// Simualação do tempo da viagem (metade, caso exista avaria).
-		usleep (2500000);
+		usleep (5000000);
 
 		if(random_avaria<=simulator.perc_avaria){ //Avaria
 
@@ -554,7 +559,7 @@ void *f_montanha_russa (){ //funcao thread montanha russa
 
 		}
 		// Simualação do resto do tempo da viagem (metade, caso exista avaria).
-		usleep (2500000);
+		usleep (5000000);
 
 		pthread_mutex_lock(&trinco_comunicate);
 		printf("A viagem acabou \n");
@@ -623,154 +628,154 @@ void *f_mecanico (){ //funcao thread mecanico
 				printf("Error creating thread\n");
 				exit(1);
 			}
-			usleep(750000);
+			usleep(500000);
 			n_clientes ++;
 		}
 		return n_clientes;
 	}
 
-int main(int argc, char **argv){
-	srand(time(NULL));
+	int main(int argc, char **argv){
+		srand(time(NULL));
 
-	int *configuration_values = read_method(argc, argv[1]);
+		int *configuration_values = read_method(argc, argv[1]);
 
-	//DEBUG = configuration_values[0];
-	simulator.mr_fim = configuration_values[2]*60;
+		//DEBUG = configuration_values[0];
+		simulator.mr_fim = configuration_values[2]*60;
 
-	simulator.mr_capacidade = configuration_values[0];
-	simulator.mr_inicio = configuration_values[1]*60;
-	simulator.minute = simulator.mr_inicio;
-	simulator.cap_carro1 = configuration_values[4];
-	simulator.cap_carro2 = configuration_values[5];
-	simulator.cap_f_interior = configuration_values[6];
-	simulator.perc_cl_normal = configuration_values[7];
-	simulator.mr_temp_volta = configuration_values[8];
-	simulator.perc_cl_vip = configuration_values[9];
-	simulator.perc_cl_vip_frente = configuration_values[10];
-	simulator.perc_avaria = configuration_values[11];
-	simulator.perc_des_fila_ext = configuration_values[12];
-	simulator.perc_des_cl_normal = configuration_values[13];
-	simulator.per_des_cl_vip = configuration_values[14];
-	simulator.per_des_cl_vipf = configuration_values[15];
-	simulator.mr_pop_mr = configuration_values[16];
+		simulator.mr_capacidade = configuration_values[0];
+		simulator.mr_inicio = configuration_values[1]*60;
+		simulator.minute = simulator.mr_inicio;
+		simulator.cap_carro1 = configuration_values[4];
+		simulator.cap_carro2 = configuration_values[5];
+		simulator.cap_f_interior = configuration_values[6];
+		simulator.perc_cl_normal = configuration_values[7];
+		simulator.mr_temp_volta = configuration_values[8];
+		simulator.perc_cl_vip = configuration_values[9];
+		simulator.perc_cl_vip_frente = configuration_values[10];
+		simulator.perc_avaria = configuration_values[11];
+		simulator.perc_des_fila_ext = configuration_values[12];
+		simulator.perc_des_cl_normal = configuration_values[13];
+		simulator.per_des_cl_vip = configuration_values[14];
+		simulator.per_des_cl_vipf = configuration_values[15];
+		simulator.mr_pop_mr = configuration_values[16];
 
-	/*if(DEBUG)*/
-	printf(" mr_pop_mr:%d\n mr_capacidade:%d\n mr_inicio:%d\n mr_fim:%d\n bilh_open:%d\n cap_carro1:%d\n cap_carro2:%d\n cap_f_interior:%d\n perc_cl_normal:%d\n mr_temp_volta:%d\n perc_cl_vip:%d\n perc_cl_vip_frente:%d\n perc_avaria:%d\n perc_des_fila_ext:%d\n perc_des_cl_normal:%d\n per_des_cl_vip:%d\n per_des_cl_vipf:%d\n", simulator.mr_pop_mr, simulator.mr_capacidade, simulator.mr_inicio,  simulator.mr_fim, simulator.bilh_open, simulator.cap_carro1, simulator.cap_carro2, simulator.cap_f_interior, simulator.perc_cl_normal, simulator.mr_temp_volta, simulator.perc_cl_vip, simulator.perc_cl_vip_frente, simulator.perc_avaria, simulator.perc_des_fila_ext, simulator.perc_des_cl_normal, simulator.per_des_cl_vip, simulator.per_des_cl_vipf);
+		/*if(DEBUG)*/
+		printf(" mr_pop_mr:%d\n mr_capacidade:%d\n mr_inicio:%d\n mr_fim:%d\n bilh_open:%d\n cap_carro1:%d\n cap_carro2:%d\n cap_f_interior:%d\n perc_cl_normal:%d\n mr_temp_volta:%d\n perc_cl_vip:%d\n perc_cl_vip_frente:%d\n perc_avaria:%d\n perc_des_fila_ext:%d\n perc_des_cl_normal:%d\n per_des_cl_vip:%d\n per_des_cl_vipf:%d\n", simulator.mr_pop_mr, simulator.mr_capacidade, simulator.mr_inicio,  simulator.mr_fim, simulator.bilh_open, simulator.cap_carro1, simulator.cap_carro2, simulator.cap_f_interior, simulator.perc_cl_normal, simulator.mr_temp_volta, simulator.perc_cl_vip, simulator.perc_cl_vip_frente, simulator.perc_avaria, simulator.perc_des_fila_ext, simulator.perc_des_cl_normal, simulator.per_des_cl_vip, simulator.per_des_cl_vipf);
 
-	/****************************** Semaphores and mutex init ********************************/
+		/****************************** Semaphores and mutex init ********************************/
 
-	sem_init(&s_recinto,0,simulator.mr_capacidade);
-	sem_init(&s_vip_frente,0,0);
-	sem_init(&s_vip,0,0);
-	sem_init(&s_normal,0,0);
-	sem_init(&s_cap_carro1,0,simulator.cap_carro1);
-	sem_init(&s_cap_carro2,0,simulator.cap_carro2);
-	sem_init(&s_viagem_mr,0,0);
-	sem_init(&s_inicia_viagem,0,0);
-	sem_init(&s_terminou_viagem,0,0);
-	sem_init(&s_avaria,0,0);
-	sem_init(&s_reparacao_feita,0,0);
+		sem_init(&s_recinto,0,simulator.mr_capacidade);
+		sem_init(&s_vip_frente,0,0);
+		sem_init(&s_vip,0,0);
+		sem_init(&s_normal,0,0);
+		sem_init(&s_cap_carro1,0,simulator.cap_carro1);
+		sem_init(&s_cap_carro2,0,simulator.cap_carro2);
+		sem_init(&s_viagem_mr,0,0);
+		sem_init(&s_inicia_viagem,0,0);
+		sem_init(&s_terminou_viagem,0,0);
+		sem_init(&s_avaria,0,0);
+		sem_init(&s_reparacao_feita,0,0);
 
-	pthread_mutex_init(&trinco_recinto,NULL);
-	pthread_mutex_init(&trinco_vip_frente,NULL);
-	pthread_mutex_init(&trinco_vip,NULL);
-	pthread_mutex_init(&trinco_normal,NULL);
-	pthread_mutex_init(&trinco_carro1,NULL);
-	pthread_mutex_init(&trinco_carro2,NULL);
-	pthread_mutex_init(&trinco_sai_recinto,NULL);
-	pthread_mutex_init(&trinco_sai_recinto_ext,NULL);
-	pthread_mutex_init(&trinco_comunicate,NULL);
-	pthread_mutex_init(&trinco_id_cliente,NULL);
-	pthread_mutex_init(&trinco_tipo_cliente,NULL);
-	pthread_mutex_init(&trinco_desistencia,NULL);
-	pthread_mutex_init(&trinco_fecha_bilheteira,NULL);
-	pthread_mutex_init(&trinco_sai_carrinho,NULL);
+		pthread_mutex_init(&trinco_recinto,NULL);
+		pthread_mutex_init(&trinco_vip_frente,NULL);
+		pthread_mutex_init(&trinco_vip,NULL);
+		pthread_mutex_init(&trinco_normal,NULL);
+		pthread_mutex_init(&trinco_carro1,NULL);
+		pthread_mutex_init(&trinco_carro2,NULL);
+		pthread_mutex_init(&trinco_sai_recinto,NULL);
+		pthread_mutex_init(&trinco_sai_recinto_ext,NULL);
+		pthread_mutex_init(&trinco_comunicate,NULL);
+		pthread_mutex_init(&trinco_id_cliente,NULL);
+		pthread_mutex_init(&trinco_tipo_cliente,NULL);
+		pthread_mutex_init(&trinco_desistencia,NULL);
+		pthread_mutex_init(&trinco_fecha_bilheteira,NULL);
+		pthread_mutex_init(&trinco_sai_carrinho,NULL);
 
-	/**************************** Initializes global variables *******************************/
+		/**************************** Initializes global variables *******************************/
 
-	m_russa_open = 1;
-	atracao_aberta = 1;
-	bilh_open=1;
-	m_valida_cintos = 0;
+		m_russa_open = 1;
+		atracao_aberta = 1;
+		bilh_open=1;
+		m_valida_cintos = 0;
 
-	/************************************ Socket *********************************************/
-	int clilen;
-	char buffer[256];
-	struct sockaddr_in serv_addr, cli_addr;
-	int n;
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if(sockfd<0) printf("ERROR opening socket\n");
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons((rand()%9999)+1024);
-	if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr))<0) printf("ERROR on binding\n");
-	listen(sockfd,5);
-	clilen = sizeof(cli_addr);
-	newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-	if(newsockfd<0) printf("ERROR on accept\n");
-	bzero(buffer,256);
+		/************************************ Socket *********************************************/
+		int clilen;
+		char buffer[256];
+		struct sockaddr_in serv_addr, cli_addr;
+		int n;
+		sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		if(sockfd<0) printf("ERROR opening socket\n");
+		bzero((char *) &serv_addr, sizeof(serv_addr));
+		serv_addr.sin_family = AF_INET;
+		serv_addr.sin_addr.s_addr = INADDR_ANY;
+		serv_addr.sin_port = htons((rand()%9999)+1024);
+		if(bind(sockfd,(struct sockaddr *) &serv_addr, sizeof(serv_addr))<0) printf("ERROR on binding\n");
+		listen(sockfd,5);
+		clilen = sizeof(cli_addr);
+		newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+		if(newsockfd<0) printf("ERROR on accept\n");
+		bzero(buffer,256);
 
-	do {
-		n = read(newsockfd,buffer,255);
-		if(n<0) printf("ERROR reading from socket\n");
-	} while(strcmp(buffer,"100"));
-	system("clear");
-	printf("A simulação começou\n");
+		do {
+			n = read(newsockfd,buffer,255);
+			if(n<0) printf("ERROR reading from socket\n");
+		} while(strcmp(buffer,"100"));
+		system("clear");
+		printf("A simulação começou\n");
 
-	/*********************************** creates threads **********************************/
+		/*********************************** creates threads **********************************/
 
-	if(pthread_create(&(t_bilheteira), NULL,(void *)&bilheteira,NULL) != 0) { //thread bilheteira
-		printf("Error creating thread\n");
-		exit(1);
+		if(pthread_create(&(t_bilheteira), NULL,(void *)&bilheteira,NULL) != 0) { //thread bilheteira
+			printf("Error creating thread\n");
+			exit(1);
+		}
+
+		if(pthread_create((&t_colaborador), NULL,(void *)&f_colaborador,NULL) != 0) {
+			printf("Error creating thread\n");
+			exit(1);
+		}
+
+		if(pthread_create((&t_montanha_russa), NULL,(void *)&f_montanha_russa,NULL) != 0) {
+			printf("Error creating thread\n");
+			exit(1);
+		}
+
+
+		if(pthread_create((&t_mecanico), NULL,(void *)&f_mecanico,NULL) != 0) {
+			printf("Error creating thread\n");
+			exit(1);
+		}
+
+		int cria_clientes = c_cliente();
+
+		while((total_clientes_recinto && bilh_open==1 )||total_clientes_recinto){
+			m_russa_open=1;			//fim
+			printf(" total clientes recinto:%d\n",total_clientes_recinto);
+			usleep(6000000);
+		}
+
+		m_russa_open=0;			//fim
+
+		usleep(3500000);
+
+		pthread_mutex_lock(&trinco_comunicate);
+		printf("[%s] A montanha russa está encerrada!\n", make_hours(simulator.minute));
+		send_message(newsockfd,simulator.minute,101,-1);
+		usleep(100000);
+		pthread_mutex_unlock(&trinco_comunicate);
+
+		do {
+			n = read(newsockfd,buffer,255);
+			if(n<0) printf("ERROR reading from socket\n");
+		} while(strcmp(buffer,"101"));
+
+		for (int i = 1; i < cria_clientes; ++i) {
+			pthread_join(t_cliente, NULL);
+		}
+
+		pthread_join(t_colaborador, NULL);
+		pthread_join(t_montanha_russa, NULL);
+		pthread_join(t_mecanico, NULL);
+
+		close(sockfd);
 	}
-
-	if(pthread_create((&t_colaborador), NULL,(void *)&f_colaborador,NULL) != 0) {
-		printf("Error creating thread\n");
-		exit(1);
-	}
-
-	if(pthread_create((&t_montanha_russa), NULL,(void *)&f_montanha_russa,NULL) != 0) {
-		printf("Error creating thread\n");
-		exit(1);
-	}
-
-
-	if(pthread_create((&t_mecanico), NULL,(void *)&f_mecanico,NULL) != 0) {
-		printf("Error creating thread\n");
-		exit(1);
-	}
-
-	int cria_clientes = c_cliente();
-
-	while((total_clientes_recinto && bilh_open==1 )||total_clientes_recinto){
-		m_russa_open=1;			//fim
-		printf(" total clientes recinto:%d\n",total_clientes_recinto);
-		usleep(6000000);
-	}
-
-	m_russa_open=0;			//fim
-
-	usleep(3500000);
-
-	pthread_mutex_lock(&trinco_comunicate);
-	printf("[%s] A montanha russa está encerrada!\n", make_hours(simulator.minute));
-	send_message(newsockfd,simulator.minute,101,-1);
-	usleep(100000);
-	pthread_mutex_unlock(&trinco_comunicate);
-
-	do {
-		n = read(newsockfd,buffer,255);
-		if(n<0) printf("ERROR reading from socket\n");
-	} while(strcmp(buffer,"101"));
-
-	for (int i = 1; i < cria_clientes; ++i) {
-		pthread_join(t_cliente, NULL);
-	}
-
-	pthread_join(t_colaborador, NULL);
-	pthread_join(t_montanha_russa, NULL);
-	pthread_join(t_mecanico, NULL);
-
-	close(sockfd);
-}
