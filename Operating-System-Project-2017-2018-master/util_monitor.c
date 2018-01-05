@@ -31,6 +31,7 @@ typedef struct breakdowns {
 typedef struct {
 	int carruagem1;
 	int carruagem2;
+	int clientes_fora;
 }s_counter;
 
 //------------------------------------------
@@ -46,7 +47,6 @@ pthread_mutex_t t_teste;
 
 int atraction = 1;
 int mister_cheat =0;
-int clientes_fora = 0;
 
 int real_time_log[24][3]={{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1}};
 void fill_realtimelog(int hour, int state, int client_id){
@@ -472,26 +472,26 @@ void save_info(int hour, int state, int client_id){
 		case 1:
 			pthread_mutex_lock(&t_teste);
 			insert_struct_client(&str_mr, hour, client_id, &*inicio_mr);
-			clientes_fora++;
+			counter.clientes_fora++;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		// Introduz cliente normal a entrar no recinto da montanha russa
 		case 11:
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 1);
-			clientes_fora--;
+			counter.clientes_fora--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 12:
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 2);
-			clientes_fora--;
+			counter.clientes_fora--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 13:
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 3);
-			clientes_fora--;
+			counter.clientes_fora--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 14:
@@ -526,7 +526,7 @@ void save_info(int hour, int state, int client_id){
 		case 51:
 			pthread_mutex_lock(&t_teste);
 			drop_activity(hour, client_id, 1,0);
-			clientes_fora--;
+			counter.clientes_fora--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 52:
@@ -704,9 +704,9 @@ void write_decoder(int hour, int state, int client_id) {
 		case 42: printf("   │  [%s] * Colaborador esta a retirar os cintos de seguranca            │\n", make_hours(hour)); break;
 
 		case 51: printf("   │  [%s] ⚫ Cliente",make_hours(hour)); printf(" %s desistiu da Montanha Russa                       │\n", three_digit_number(client_id)); break;
-		case 52: printf("   │  [%s] ⚫ Cliente Normal",make_hours(hour)); printf(" %s desistiu da Montanha Russa                │\n", three_digit_number(client_id)); break;
-		case 53: printf("   │  [%s] ⚫ Cliente Vip",make_hours(hour)); printf(" %s desistiu da Montanha Russa                   │\n", three_digit_number(client_id)); break;
-		case 54: printf("   │  [%s] ⚫ Cliente Vip_frente",make_hours(hour)); printf(" %s desistiu da Montanha Russa            │\n", three_digit_number(client_id)); break;
+		case 52: printf("   │  [%s] ⚫ Cliente Normal",make_hours(hour)); printf(" %s desistiu e saiu da Montanha Russa         │\n", three_digit_number(client_id)); break;
+		case 53: printf("   │  [%s] ⚫ Cliente Vip",make_hours(hour)); printf(" %s desistiu e saiu da Montanha Russa            │\n", three_digit_number(client_id)); break;
+		case 54: printf("   │  [%s] ⚫ Cliente Vip_frente",make_hours(hour)); printf(" %s desistiu e saiu da Montanha Russa     │\n", three_digit_number(client_id)); break;
 
 		case 61: printf("   │  [%s] ❌ A Montanha Russa iniciou a viagem                            │\n", make_hours(hour)); break;
 		case 62: printf("   │  [%s] ❌ A Montanha Russa parou devido a uma avaria                   │\n", make_hours(hour)); break;
@@ -800,7 +800,7 @@ void creat_stats (){
 	printf("   │   ■─[ Clientes ]────────────────────────────────────────────────────┐   │\n");
 	printf("   │   │   Total clientes na entrada                    :          %s   │   │\n",three_digit_number(number_counter(2)));
 	printf("   │   │   Total clientes na Montanha russa             :          %s   │   │\n",three_digit_number(number_counter(1)));
-	printf("   │   │   Total clientes na fila exterior              :          %s   │   │\n",three_digit_number(clientes_fora));
+	printf("   │   │   Total clientes na fila exterior              :          %s   │   │\n",three_digit_number(counter.clientes_fora));
 	printf("   │   │   Total clientes na fila interior              :          %s   │   │\n",three_digit_number(0));
 	printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 	printf("   │   ■─[ Desistencias ]────────────────────────────────────────────────┐   │\n");
