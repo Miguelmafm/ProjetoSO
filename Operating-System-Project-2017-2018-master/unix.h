@@ -63,6 +63,8 @@ int calc_stat_average();
 void drop_activity();
 int drop_counter();
 int number_counter();
+void add_client_type_and_entry_hour();
+void out_roller_coaster();
 //void calc_stat_average_swimm();
 /**************************** simulador ****************************/
 void sunbath(int);
