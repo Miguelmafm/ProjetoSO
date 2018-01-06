@@ -30,9 +30,13 @@ typedef struct breakdowns {
 
 typedef struct {
 	int carruagem1;
-	int carruagem2;
+	int portas;
 	int clientes_fora;
 	int clientes_dentro;
+	int fila_normal;
+	int fila_vip;
+	int fila_vip_frente;
+	int avaria;
 }s_counter;
 
 //------------------------------------------
@@ -42,7 +46,7 @@ struct breakdowns str_mr_avaria;
 general *inicio_mr = NULL;
 breakdowns *inicio_avaria = NULL;
 
-s_counter static counter = {0,0,0,0};
+s_counter static counter = {0,1,0,0,0,0,0,0};
 
 pthread_mutex_t t_teste;
 
@@ -452,6 +456,7 @@ void save_info(int hour, int state, int client_id){
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 1);
 			counter.clientes_fora--;
+			counter.fila_normal++;
 			counter.clientes_dentro++;
 			pthread_mutex_unlock(&t_teste);
 			break;
@@ -459,6 +464,7 @@ void save_info(int hour, int state, int client_id){
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 2);
 			counter.clientes_fora--;
+			counter.fila_vip++;
 			counter.clientes_dentro++;
 			pthread_mutex_unlock(&t_teste);
 			break;
@@ -466,31 +472,34 @@ void save_info(int hour, int state, int client_id){
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 3);
 			counter.clientes_fora--;
+			counter.fila_vip_frente++;
 			counter.clientes_dentro++;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 14:
 			pthread_mutex_lock(&t_teste);
 			car_entry(hour, client_id, 1);
-			if(counter.carruagem1 < 10){counter.carruagem1++;}else{counter.carruagem2++;}
+			if(counter.carruagem1 < 20){counter.carruagem1++;}
+			counter.fila_normal--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 15:
 			pthread_mutex_lock(&t_teste);
 			car_entry(hour, client_id, 2);
-			if(counter.carruagem1 < 10){counter.carruagem1++;}else{counter.carruagem2++;}
+			if(counter.carruagem1 < 20){counter.carruagem1++;}
+			counter.fila_vip--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 16:
 			pthread_mutex_lock(&t_teste);
 			car_entry(hour, client_id, 3);
-			if(counter.carruagem1 < 10){counter.carruagem1++;}else{counter.carruagem2++;}
+			if(counter.carruagem1 < 20){counter.carruagem1++;}
+			counter.fila_vip_frente--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 31:
 			pthread_mutex_lock(&t_teste);
 			car_out(hour, client_id);
-			if(counter.carruagem2 > 0){counter.carruagem2--;}else{counter.carruagem1--;}
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 32:
@@ -509,27 +518,37 @@ void save_info(int hour, int state, int client_id){
 			pthread_mutex_lock(&t_teste);
 			drop_activity(hour, client_id, 2,1);
 			counter.clientes_dentro--;
+			counter.fila_normal--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 53:
 			pthread_mutex_lock(&t_teste);
 			drop_activity(hour, client_id, 2,2);
 			counter.clientes_dentro--;
+			counter.fila_vip--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 54:
 			pthread_mutex_lock(&t_teste);
 			drop_activity(hour, client_id, 2,3);
 			counter.clientes_dentro--;
+			counter.fila_vip_frente--;
+			pthread_mutex_unlock(&t_teste);
+			break;
+		case 63:
+			pthread_mutex_lock(&t_teste);
+			counter.avaria=0;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 64:
+			pthread_mutex_lock(&t_teste);
 			counter.carruagem1 = 0;
-			counter.carruagem2 = 0;
+			pthread_mutex_unlock(&t_teste);
 			break;
 		case 71:
 			pthread_mutex_lock(&t_teste);
 			insert_struct_breakdowns(&str_mr_avaria, hour, &*inicio_avaria);
+			counter.avaria=1;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 82:
@@ -542,11 +561,11 @@ void save_info(int hour, int state, int client_id){
 			add_repair_start_or_finish(hour, 2);
 			pthread_mutex_unlock(&t_teste);
 			break;
-		// case 100:
-		// 	pthread_mutex_lock(&t_teste);
-		// 	//counter.tobo = 0;
-		// 	pthread_mutex_unlock(&t_teste);
-		// 	break;
+		case 90:
+			pthread_mutex_lock(&t_teste);
+			counter.portas=0;
+			pthread_mutex_unlock(&t_teste);
+			break;
 		case 101:
 			atraction = 0;
 		default:
@@ -747,49 +766,34 @@ void print_header(int tab, int hour){
 	else printf("   ├─────────────────────────────[ ·∙  espera!  ∙· ]─────────────────────────┤\n");
 }
 
-// Função para obter percentagem de pessoas
-// int get_percent(int number){
-// 	float final_n;
-//
-// 	final_n = number * 7 / 60;
-//
-// 	// dif_tot = dif_tot + total_a;
-// 	// }
-// 	// ola_tot = (int)(dif_tot / total_int);
-// 	// final_tot = (int)round(ola_tot);
-//
-// 	return final_n;
-// }
+//Função para obter percentagem de pessoas
+int get_percent(int number){
+	float final_n;
+
+	final_n = number * 7 / 60;
+
+	// dif_tot = dif_tot + total_a;
+	// }
+	// ola_tot = (int)(dif_tot / total_int);
+	 //final_n = (int)round(final_n);
+
+	return final_n;
+}
 
 // Função para imprimir as carruagens e os graficos de pessoas no recinto e filas
 void creat_graph(){
 
-	float recinto =  rand()%7+1/*get_percent(counter.clientes_dentro)*/;
-	float fila_vip_frente = rand()%7+1/*get_percent(current_queue_size(3))*/;
-	float fila_vip = rand()%7+1/*get_percent(current_queue_size(2))*/;
-	float fila_normal = rand()%7+1/*get_percent(current_queue_size(1))*/;
-	//int car1 = 1;//counter.carruagem1;
-	int car2 = 2;//counter.carruagem2;
+	float recinto = get_percent(counter.clientes_dentro);
+	float fila_vip_frente = get_percent(counter.fila_vip_frente);
+	float fila_vip = get_percent(counter.fila_vip);
+	float fila_normal = get_percent(counter.fila_normal);
+	int car1 = counter.carruagem1;
+	int portas_abertas = counter.portas;
+	int avaria = counter.avaria;
 
-	int tobogan = 0;
-	int percent_aqua = 0;
-	int percent_pool = 0;
-
-	int cheat1 = random()%100;
-	if(atraction == 1) {
-		if(cheat1 < 10) {
-			if(car1 == 20) {
-				car1 = 0;
-			}else{
-				car1++;
-			}
-		}
-	}else if(car1 != 0 ) {
-		car1--;
-	}
 
 	printf("   │                  ┌───────────────────────────────────┐                  │\n ");
-	printf("  │ ┌────────────────┤       Eventos em tempo real       ├────────────────┐ │\n");
+	printf("  │ ┌────────────────┤       "); if(portas_abertas==1){printf("\033[32m   Portas abertas    \033[0m");}else{printf("\033[31m   Portas fechadas   \033[0m");}printf("   "); if(avaria==1){printf("🔧");}else{printf(" ");} printf("   ├────────────────┐ │\n");
 	printf("   │ │                └───────────────────────────────────┘                │ │\n");
 	printf("   │ │           Carruagem 1                         Carruagem 2           │ │\n");
 	printf("   │┌┴────────────────┴────────────────┐ ┌────────────────┴────────────────┴┐│\n");
@@ -804,7 +808,7 @@ void creat_graph(){
 	printf("   │ │    ⭕                      ⭕           ⭕                       ⭕     │ │\n");
 	printf("   │ │  ╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸  │ │\n");
 	printf("   │ ├─────────────────────────────────────────────────────────────────────┤ │\n");
-	printf("   │ │  60  ┫    "); if(recinto >= 7) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 7) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 7) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 7) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │  60  ┫    "); if(recinto == 7) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente == 7) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip == 7) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal == 7) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
 	printf("   │ │  50  ┫    "); if(recinto >= 6) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 6) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 6) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 6) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
 	printf("   │ │  40  ┫    "); if(recinto >= 5) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 5) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 5) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 5) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
 	printf("   │ │  30  ┫    "); if(recinto >= 4) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 4) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 4) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 4) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
@@ -822,9 +826,9 @@ void creat_stats (){
 
 	printf("   │   ■─[ Clientes ]────────────────────────────────────────────────────┐   │\n");
 	printf("   │   │   Total de clientes                            :          %s   │   │\n",three_digit_number(number_counter(2))); // feito
-	printf("   │   │   Total de clientes que entraram no recinto    :  N       %s   │   │\n",three_digit_number(current_queue_size(1)/*number_counter(1)*/)); // feito
-	printf("   │   │   Total clientes na fila exterior              :  V       %s   │   │\n",three_digit_number(current_queue_size(2)/*counter.clientes_fora*/)); // feito
-	printf("   │   │   Total clientes nas filas interiores          :  VF      %s   │   │\n",three_digit_number(current_queue_size(3)/*counter.clientes_dentro*/)); // feito
+	printf("   │   │   Total de clientes que entraram no recinto    :          %s   │   │\n",three_digit_number(number_counter(1))); // feito
+	printf("   │   │   Total clientes na fila exterior              :          %s   │   │\n",three_digit_number(counter.clientes_fora)); // feito
+	printf("   │   │   Total clientes nas filas interiores          :          %s   │   │\n",three_digit_number(counter.clientes_dentro)); // feito
 	printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 	printf("   │   ■─[ Desistencias ]────────────────────────────────────────────────┐   │\n");
 	printf("   │   │   Desistências na fila exterior                :          %s   │   │\n",three_digit_number(drop_counter(1))); // feito

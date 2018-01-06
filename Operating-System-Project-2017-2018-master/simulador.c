@@ -497,7 +497,7 @@ void * f_montanha_russa (){ //funcao thread montanha russa
 		pthread_mutex_unlock(&trinco_comunicate);
 
 		// Simualação do tempo da viagem (metade, caso exista avaria).
-		usleep (5000000);
+		usleep((simulator.mr_temp_volta/2));
 
 		if(random_avaria<=simulator.perc_avaria){ //Avaria
 
@@ -531,7 +531,7 @@ void * f_montanha_russa (){ //funcao thread montanha russa
 
 		}
 		// Simualação do resto do tempo da viagem (metade, caso exista avaria).
-		usleep (5000000);
+		usleep((simulator.mr_temp_volta/2));
 
 		pthread_mutex_lock(&trinco_comunicate);
 		printf("A viagem acabou \n");
@@ -620,7 +620,7 @@ int main(int argc, char **argv){
 	simulator.cap_carro2 = configuration_values[5];
 	simulator.cap_f_interior = configuration_values[6];
 	simulator.perc_cl_normal = configuration_values[7];
-	simulator.mr_temp_volta = configuration_values[8];
+	simulator.mr_temp_volta = configuration_values[8]*1000000;
 	simulator.perc_cl_vip = configuration_values[9];
 	simulator.perc_cl_vip_frente = configuration_values[10];
 	simulator.perc_avaria = configuration_values[11];
