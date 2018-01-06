@@ -1,9 +1,9 @@
 //*****************************************************************
-//			Sistemas Operativos		- Projecto 2017/2018
+//	Sistemas Operativos		- Projecto 2017/2018
 //
-// 			Miguel Marques			- nº 2068614
-// 			Rúben Marques				- nº 2072212
-// 			Vitor Paixão				- nº 2021212
+// 	Miguel Marques			- nº 2068614
+// 	Rúben Marques			- nº 2072212
+// 	Vitor Paixão			- nº 2021212
 //*****************************************************************
 
 #include <stdio.h>
@@ -21,7 +21,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-
 #define ADDRESS      "champ_socket"
 
 #define UNIXSTR_PATH "/tmp/socket.unix.stream"
@@ -30,49 +29,58 @@
 
 #define DEBUG debuging
 #define CONFIGURATION_PARAMS_NUMBER 10
-#define MAX_LINE 512
 
 int static debuging=0;
+
 /******************************* util *******************************/
+
 char * make_hours(int);
 void send_message(int,int,int,int);
 char * read_message(int);
 char * three_digit_number(int);
 
 /************************** util_simulador **************************/
+
 int * read_method();
 time_t t_inicial, t_agora;
 
 /*************************** util_monitor ***************************/
-int write_log();
+
+int write_log(int,int,int);
 int write_report();
 int * decode();
-void save_info();
-void write_decoder();
+void save_info(int,int,int);
+void write_decoder(int,int,int);
 void fill_empty(int);
 void print_header(int,int);
 void print_body(int);
 void print_footer();
 void fill_realtimelog(int,int,int);
 void creat_graph();
-//void creat_stats();
-//void creat_stats();
-void clear_memory();
-//void insert_struct();
-int calc_stat_average();
-void drop_activity();
-int drop_counter();
-int number_counter();
+void creat_stats();
+int max_time(int,int);
+int current_queue_size(int);
+int calc_stat_average(int,int);
+void drop_activity(int,int,int,int);
+int drop_counter(int);
+int calc_stat_average_break_or_number(int);
+int number_counter(int);
 void add_client_type_and_entry_hour();
-void out_roller_coaster();
-//void calc_stat_average_swimm();
+void out_roller_coaster(int,int);
+void add_client_type_and_entry_hour(int,int,int);
+void car_out(int,int);
+void car_entry(int,int,int);
+void add_repair_start_or_finish(int,int);
+
 /**************************** simulador ****************************/
-void sunbath(int);
-void swimming_pool(int);
-void select_where_to_go(int);
-int * handle_client(int);
-int create_client();
-int * aquapark();
-/***************************** monitr ******************************/
+
+int c_cliente();
+void * f_cliente ();
+int * bilheteira();
+void * f_colaborador();
+void * f_montanha_russa();
+void * f_mecanico();
+
+/***************************** monitor ******************************/
 int * print_screen();
 int * reader();
