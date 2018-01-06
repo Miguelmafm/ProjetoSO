@@ -1,15 +1,14 @@
 ///*****************************************************************
-//			Sistemas Operativos		- Projecto 2017/2018
+//	Sistemas Operativos		- Projecto 2017/2018
 //
-// 			Miguel Marques			- nº 2068614
-// 			Rúben Marques				- nº 2072212
-// 			Vitor Paixão				- nº 2021212
+// 	Miguel Marques			- nº 2068614
+// 	Rúben Marques			- nº 2072212
+// 	Vitor Paixão			- nº 2021212
 //*****************************************************************
 
 #include "unix.h"
 
 int static sockfd;
-pthread_t t_monitor;
 pthread_t t_reader;
 pthread_t t_print_screen;
 int static simulation=0;
@@ -17,11 +16,8 @@ int static tab=0;
 int static hour=0;
 int static monitor_on=0;
 int static end_monitor = 1;
-int ola = 0;
 
-
-
-
+// Função para construir ecrã
 int * print_screen(){
 	while (end_monitor) {
 		if(simulation==0 && monitor_on==0) tab=0;
@@ -33,6 +29,8 @@ int * print_screen(){
 		usleep(70000);
 	}
 }
+
+// Função para enviar
 int * reader(){
 	// this should go to the reader at some point
 	int choice;
@@ -40,24 +38,24 @@ int * reader(){
 		scanf("%d",&choice);
 		switch(choice) {
 			case 1:
-			tab=1;
-			break;
+				tab=1;
+				break;
 			case 2:
-			tab=2;
-			break;
+				tab=2;
+				break;
 			case 3:
-			tab=3;
-			break;
+				tab=3;
+				break;
 			case 4:
-			tab=4;
-			break;
+				tab=4;
+				break;
 			case 5:
-			simulation=0;
-			monitor_on=0;
-			break;
+				simulation=0;
+				monitor_on=0;
+				break;
 			default:
-			tab = 6;
-			break;
+				tab = 6;
+				break;
 		}
 		printf("\n");
 		print_header(tab,hour);
@@ -70,10 +68,9 @@ int main(){
 	printf("%s\n", "Running monitor"); srand(time(NULL));
 
 	FILE *file_log = fopen("simulation.log", "w");
-	fprintf(file_log,"-------------------------------Monitor Log-------------------------------\n");
+	fprintf(file_log,"-------------------------------Log do monitor-------------------------------\n");
 	fclose(file_log);
 
-	//adicionar ---------------------------- no final do ficheiro
 	/************************************ Socket *********************************************/
 	int n;
 	struct sockaddr_in serv_addr;
@@ -94,8 +91,6 @@ int main(){
 	}
 
 	bzero(buffer,256);
-	//fgets(buffer,255,stdin);
-	//printf("estou aqui 2\n" );
 	if(pthread_create(&(t_print_screen), NULL,(int *)&print_screen,NULL) != 0) { //thread sunbath
 		printf("Error creating thread\n");
 		exit(1);
@@ -127,22 +122,15 @@ int main(){
 		save_info(info[0],info[1],info[2]);
 		fill_realtimelog(info[0],info[1],info[2]);
 		write_log(info[0],info[1],info[2]);
-		//print_screen(info[0],info[1],info[2]);
-		//calc_stats();
-		// strcpy(buffer,"200");
-		// n = write(sockfd,buffer,strlen(buffer));
-		// bzero(buffer,256);
-		//	calc_stat_average_swimm();
 	}
 
 	pthread_join(t_reader, NULL);
-	//pthread_join(t_monitor , NULL);
 
 	strcpy(buffer,"101");
 	n = write(sockfd,buffer,strlen(buffer));
 	bzero(buffer,256);
 	end_monitor = 0;
 	write_report();
+	pthread_join(t_print_screen , NULL);
 	close(sockfd);
-	clear_memory();
 }
