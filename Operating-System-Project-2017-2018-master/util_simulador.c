@@ -1,9 +1,9 @@
 //*****************************************************************
-//			Sistemas Operativos		- Projecto 2017/2018
+//	Sistemas Operativos		- Projecto 2017/2018
 //
-// 			Miguel Marques			- nº 2068614
-// 			Rúben Marques				- nº 2072212
-// 			Vitor Paixão				- nº 2021212
+// 	Miguel Marques			- nº 2068614
+// 	Rúben Marques			- nº 2072212
+// 	Vitor Paixão			- nº 2021212
 //*****************************************************************
 
 #include "unix.h"
@@ -51,6 +51,7 @@ int * read_method(int numberargs, char file_selected[50]){
 		else if(!strcmp("per_des_cl_vip",param)) retorna[14] = value;
 		else if(!strcmp("per_des_cl_vipf",param)) retorna[15] = value;
 		else if(!strcmp("mr_pop_mr",param)) retorna[16] = value;
+		else if(!strcmp("DEBUG",param)) retorna[17] = value;
 		else{
 			printf("Error: %s Not a valid configuration setting\n", param);
 			return 0;
