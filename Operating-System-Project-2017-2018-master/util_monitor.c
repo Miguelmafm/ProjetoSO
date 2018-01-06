@@ -1,9 +1,9 @@
 //*****************************************************************
-//			Sistemas Operativos		- Projecto 2017/2018
+//	Sistemas Operativos		- Projecto 2017/2018
 //
-// 			Miguel Marques			- nº 2068614
-// 			Rúben Marques				- nº 2072212
-// 			Vitor Paixão				- nº 2021212
+// 	Miguel Marques			- nº 2068614
+// 	Rúben Marques			- nº 2072212
+// 	Vitor Paixão			- nº 2021212
 //*****************************************************************
 
 #include "unix.h"
@@ -32,6 +32,7 @@ typedef struct {
 	int carruagem1;
 	int carruagem2;
 	int clientes_fora;
+	int clientes_dentro;
 }s_counter;
 
 //------------------------------------------
@@ -41,14 +42,15 @@ struct breakdowns str_mr_avaria;
 general *inicio_mr = NULL;
 breakdowns *inicio_avaria = NULL;
 
-s_counter static counter = {0,0};
+s_counter static counter = {0,0,0,0};
 
 pthread_mutex_t t_teste;
 
 int atraction = 1;
-int mister_cheat =0;
+int car1 =0;
 
 int real_time_log[24][3]={{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1}};
+// Função para preencher o ecrã em tempo real
 void fill_realtimelog(int hour, int state, int client_id){
 	int i;
 	for(i=1; i<24; i++) {
@@ -60,6 +62,8 @@ void fill_realtimelog(int hour, int state, int client_id){
 	real_time_log[23][1]=state;
 	real_time_log[23][2]=client_id;
 }
+
+// Função para obter tempo máximo
 int max_time(int client_type, int state){
 
 	int entra = 0;
@@ -99,65 +103,23 @@ int max_time(int client_type, int state){
 			aux = aux->next;
 		}
 	}
-
 	return final;
 }
 
-int current_number(general *c){
-	// 								general *current = &*c;
-	// 								int counte = 0;
-	// 								// while(current != NULL) {
-	// 								// 								if(current->saida == 0 && current->entrada != 0) {
-	// 								// 																counte++;
-	// 								// 								}
-	// 								// 								current = current->next;
-	// 								// }
-	// 								return counte;
+// Função para obter tamanha da fila
+int current_queue_size(int client_type){
+	general *current = &*inicio_mr;
+	int counte = 0;
+	while(current != NULL) {
+		if(current->chegada_mr != 0 && current->entrada_mr != 0 && current->saida_mr == 0 && current->tipo_cliente == client_type && current->entrada_car == 0) {
+			counte++;
+		}
+		current = current->next;
+	}
+	return counte;
 }
 
-int average_time(general *t){
-
-	int total;
-	int saida = 0;
-	int entra = 0;
-	float dif = 0;
-	int ola = 0;
-	int final = 0;
-	int total1 = 0;
-
-	general *aux2 = &*t;
-
-	// while (aux2 != NULL) {
-	// 								total = 0;
-	// 								if(aux2->entrada != 0) {
-	// 																saida = aux2->saida;
-	// 																entra = aux2->entrada;
-	// 																total = (saida - entra);
-	// 																total1++;
-	// 								}
-	// 								aux2 = aux2->next;
-	// 								dif = dif + total;
-	// }
-	// ola = (int)(dif / total1);
-	// final = (int)round(ola);
-
-	return final;
-}
-
-// void drop_activity(int hour, int client_id, int drop_queue){
-//
-// 								general *drop_act = &*inicio_mr;
-//
-// 								while (drop_act != NULL) {
-// 																if(drop_act->ID == client_id && (drop_act->desistencia_ext == 0 || drop_act->desistencia_int == 0) ) {
-//
-// 																		if(drop_queue == 1){drop_act->desistencia_ext = hour;}else{drop_act->desistencia_int = hour;}
-// 																}
-// 																drop_act = drop_act->next;
-// 								}
-//
-// }
-
+// Função para obter o numero de desistencias.
 int drop_counter(int state){
 	// state 1 - desistencias exterior
 	// state 2 - desistencias interior
@@ -186,7 +148,8 @@ int drop_counter(int state){
 	return count;
 }
 
-int number_counter(int state/*, int client_type*/){
+// Função para contar numero de entradas
+int number_counter(int state){
 
 	int count = 0;
 	general * aux_counter = &*inicio_mr;
@@ -213,6 +176,7 @@ int number_counter(int state/*, int client_type*/){
 	return count;
 }
 
+// Função para calcular tempo médio e número de avarias
 int calc_stat_average_break_or_number(int state){
 	int ola_tot = 0;
 	float dif_tot = 0;
@@ -253,11 +217,10 @@ int calc_stat_average_break_or_number(int state){
 		}
 		break;
 	}
-
 	return final_tot;
 }
 
-
+// Função para contar tempo médio de espera nas filas
 int calc_stat_average(int state, int client_type){
 	int ola_tot = 0;
 	float dif_tot = 0;
@@ -315,6 +278,7 @@ int calc_stat_average(int state, int client_type){
 	return final_tot;
 }
 
+// Função para inserir um cliente
 void insert_struct_client(struct general *a, int hour, int client_id, general *estr){
 
 	a = (struct general*) malloc(sizeof(struct general));
@@ -345,6 +309,7 @@ void insert_struct_client(struct general *a, int hour, int client_id, general *e
 
 }
 
+// Função para inserir uma avaria
 void insert_struct_breakdowns(struct breakdowns *a, int hour, breakdowns *estr){
 
 	a = (struct breakdowns*) malloc(sizeof(struct breakdowns));
@@ -369,6 +334,7 @@ void insert_struct_breakdowns(struct breakdowns *a, int hour, breakdowns *estr){
 
 }
 
+// Função para adicionar o tipo de cliente e hora de entrada
 void add_client_type_and_entry_hour(int hour, int client_id, int client_type){
 	general *aux = &*inicio_mr;
 
@@ -382,7 +348,7 @@ void add_client_type_and_entry_hour(int hour, int client_id, int client_type){
 	}
 }
 
-
+// Função para adicionar a hora de saida da M.R.
 void out_roller_coaster(int hour, int client_id){
 
 	general *aux = &*inicio_mr;
@@ -398,6 +364,7 @@ void out_roller_coaster(int hour, int client_id){
 
 }
 
+// Função para adicionar a hora de saida da carruagem
 void car_out(int hour, int client_id){
 
 	general *aux = &*inicio_mr;
@@ -412,6 +379,7 @@ void car_out(int hour, int client_id){
 
 }
 
+// Função para adicionar a hora de entrada na carruagem
 void car_entry(int hour, int client_id, int client_type){
 
 	general *aux = &*inicio_mr;
@@ -424,6 +392,7 @@ void car_entry(int hour, int client_id, int client_type){
 	}
 }
 
+// Função para adicionar desistencias externas ou internas
 void drop_activity(int hour, int client_id, int drop_queue, int client_type){
 
 	general *drop_act = &*inicio_mr;
@@ -431,13 +400,17 @@ void drop_activity(int hour, int client_id, int drop_queue, int client_type){
 	while (drop_act != NULL) {
 		if(drop_act->ID == client_id && (drop_act->desistencia_ext == 0 || drop_act->desistencia_int == 0) && drop_act->tipo_cliente == client_type) {
 
-			if(drop_queue == 1){drop_act->desistencia_ext = hour;}else{drop_act->desistencia_int = hour;}
+			if(drop_queue == 1){
+				drop_act->desistencia_ext = hour;
+			} else {
+				drop_act->desistencia_int = hour;
+			}
 		}
 		drop_act = drop_act->next;
 	}
-
 }
 
+// Função para adicionar inicio ou conclusão da reparação
 void add_repair_start_or_finish(int hour, int state){
 	// state 1 - adiciona inicio da reparação
 	// state 2 - adiciona a conclusão da reparação
@@ -465,33 +438,35 @@ void add_repair_start_or_finish(int hour, int state){
 
 }
 
+// Função para interpretar mensagens
 void save_info(int hour, int state, int client_id){
 
 	switch(state) {
-		// Introduz cliente a chegar à montanha russa
 		case 1:
 			pthread_mutex_lock(&t_teste);
 			insert_struct_client(&str_mr, hour, client_id, &*inicio_mr);
 			counter.clientes_fora++;
 			pthread_mutex_unlock(&t_teste);
 			break;
-		// Introduz cliente normal a entrar no recinto da montanha russa
 		case 11:
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 1);
 			counter.clientes_fora--;
+			counter.clientes_dentro++;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 12:
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 2);
 			counter.clientes_fora--;
+			counter.clientes_dentro++;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 13:
 			pthread_mutex_lock(&t_teste);
 			add_client_type_and_entry_hour(hour, client_id, 3);
 			counter.clientes_fora--;
+			counter.clientes_dentro++;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 14:
@@ -521,6 +496,7 @@ void save_info(int hour, int state, int client_id){
 		case 32:
 			pthread_mutex_lock(&t_teste);
 			out_roller_coaster(hour, client_id);
+			counter.clientes_dentro--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 51:
@@ -532,16 +508,19 @@ void save_info(int hour, int state, int client_id){
 		case 52:
 			pthread_mutex_lock(&t_teste);
 			drop_activity(hour, client_id, 2,1);
+			counter.clientes_dentro--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 53:
 			pthread_mutex_lock(&t_teste);
 			drop_activity(hour, client_id, 2,2);
+			counter.clientes_dentro--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 54:
 			pthread_mutex_lock(&t_teste);
 			drop_activity(hour, client_id, 2,3);
+			counter.clientes_dentro--;
 			pthread_mutex_unlock(&t_teste);
 			break;
 		case 64:
@@ -563,11 +542,11 @@ void save_info(int hour, int state, int client_id){
 			add_repair_start_or_finish(hour, 2);
 			pthread_mutex_unlock(&t_teste);
 			break;
-		case 100:
-			pthread_mutex_lock(&t_teste);
-			//counter.tobo = 0;
-			pthread_mutex_unlock(&t_teste);
-			break;
+		// case 100:
+		// 	pthread_mutex_lock(&t_teste);
+		// 	//counter.tobo = 0;
+		// 	pthread_mutex_unlock(&t_teste);
+		// 	break;
 		case 101:
 			atraction = 0;
 		default:
@@ -575,7 +554,7 @@ void save_info(int hour, int state, int client_id){
 	}
 }
 
-
+// Função para guardar os eventos no ficheiro simulation.log
 int write_log(int hour, int state, int client_id){
 	FILE *file_log = fopen("simulation.log", "a");
 	if(file_log == NULL) {
@@ -624,12 +603,13 @@ int write_log(int hour, int state, int client_id){
 
 		case 100: fprintf(file_log,"[%s] ⛬ Simulacao iniciada.\n", make_hours(hour)); break;
 		case 101: fprintf(file_log,"[%s] ⛬ Simulacao terminada.\n", make_hours(hour)); break;
-		default: fprintf(file_log,"[%s] Erro: numero enviado do simulador esta errado", make_hours(hour)); break;
+		default: /*fprintf(file_log,"[%s] Erro: numero enviado do simulador esta errado", make_hours(hour));*/ break;
 	}
 	fclose(file_log);
 	return 1;
 }
 
+// Função para guardar estatisticas no final da simulação
 int write_report(){
 	FILE *file_report = fopen("statistics.txt", "w");
 	if(file_report == NULL) {
@@ -639,10 +619,10 @@ int write_report(){
 
 	fprintf(file_report,"%s","---------------------------Simulation statistics--------------------------\n");
 	fprintf(file_report,"%s","Clientes:\n");
-	fprintf(file_report,"	%s : %d\n","Total clientes na entrada", number_counter(2));
-	fprintf(file_report,"	%s : %d\n","Total clientes na Montanha russa", number_counter(1));
-	fprintf(file_report,"	%s : %d\n","Total clientes na fila exterior", number_counter(0));
-	fprintf(file_report,"	%s : %d\n","Total clientes na fila interior", number_counter(0));
+	fprintf(file_report,"	%s : %d\n","Total de clientes", number_counter(2)); // feito
+	fprintf(file_report,"	%s : %d\n","Total de clientes que entraram no recinto", number_counter(1)); // feito
+	fprintf(file_report,"	%s : %d\n","Total clientes na fila exterior", counter.clientes_fora); // feito
+	fprintf(file_report,"	%s : %d\n","Total clientes na fila interior", counter.clientes_dentro); // feito
 	fprintf(file_report,"%s","Desistencias:\n");
 	fprintf(file_report,"	%s : %d\n","Desistências na fila exterior", drop_counter(1)); // feito
 	fprintf(file_report,"	%s : %d\n","Desistências na fila interior", drop_counter(2)); // feito
@@ -660,13 +640,14 @@ int write_report(){
 	fprintf(file_report,"	%s : %s\n","Tempo máximo na fila interior (Normal)", make_hours(max_time(1,2))); // feito
 	fprintf(file_report,"%s","Avarias:\n");
 	fprintf(file_report,"	%s : %s\n","Tempo médio de reparação de avarias", make_hours(calc_stat_average_break_or_number(1))); // feito
-	fprintf(file_report,"	%s : %s\n","Número total de avarias", make_hours(calc_stat_average_break_or_number(2))); // feito
+	fprintf(file_report,"	%s : %d\n","Número total de avarias", calc_stat_average_break_or_number(2)); // feito
 	fprintf(file_report,"%s","\n--------------------------------------------------------------------------\n");
 	fclose(file_report);
 
 	return 1;
 }
 
+// Função para descodificar a mensagens
 int * decode (char str[28]){
 	char s_hours[4];
 	char s_state[3];
@@ -681,12 +662,12 @@ int * decode (char str[28]){
 	return final;
 }
 
+// Função para escrever eventos no ecrã
 void write_decoder(int hour, int state, int client_id) {
 	switch(state) {
 		case 1: printf("   │  [%s] ❤ Cliente",make_hours(hour)); printf(" %s chegou à Montanha Russa                          │\n", three_digit_number(client_id)); break;
 
-		//case 11: printf("   │  [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa       │\n", three_digit_number(client_id)); break;
-		case 11: printf("│\033[31m     [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa    \033[0m│\n", three_digit_number(client_id)); break;
+		case 11: printf("   │\033[31m  [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa       \033[0m│\n", three_digit_number(client_id)); break;
 		case 12: printf("   │  [%s] ➤ Cliente Vip",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa          │\n", three_digit_number(client_id)); break;
 		case 13: printf("   │  [%s] ➤ Cliente Vip_frente",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa   │\n", three_digit_number(client_id)); break;
 
@@ -727,85 +708,123 @@ void write_decoder(int hour, int state, int client_id) {
 		case 101: printf("   │  [%s] ⛬ Simulacao terminada                                          │\n", make_hours(hour)); break;
 
 		case -1: printf("   │                                                                         │\n"); break;
-		default: printf("   │  [%s] Erro: numero enviado do simulador está errado                  │\n", make_hours(hour)); break;
+		default: /*printf("   │  [%s] Erro: numero enviado do simulador está errado                  │\n", make_hours(hour));*/ break;
 	}
-
 }
+
+// Função para escrever espaços vazios
 void fill_empty(int qto){
 	int i=0;
 	for(i=0; i<qto; i++) printf("   │                                                                         │\n");
 }
+
+// Função para imprimir o header do monitor
 void print_header(int tab, int hour){
-	// cria cabeçalho
+
 	printf("   ┌─────────────────────────────────────────────────────────────────────────┐\n   │                      Sistemas Operativos 2017/2018                      │\n   └─────────────────────────────────────────────────────────────────────────┘\n ┌────────────────┌────────────────────────────────────────────────────────────┐\n");
 	switch(tab) {
-		case 1: printf(" │      Logos     │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n"); break;
-		case 2: printf(" │  Estatisticas  │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n"); break;
-		case 3: printf(" │    Gráfico     │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n"); break;
-		case 4: printf(" │     Sobre      │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n"); break;
-		case 0: printf(" │     Iniciar    │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n"); break;
-		default: printf(" │     UPS!!      │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n"); break;
+		case 1:
+			printf(" │      Logos     │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n");
+			break;
+		case 2:
+			printf(" │  Estatisticas  │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n");
+			break;
+		case 3:
+			printf(" │    Gráfico     │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n");
+			break;
+		case 4:
+			printf(" │     Sobre      │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n");
+			break;
+		case 0:
+			printf(" │     Iniciar    │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n");
+			break;
+		default:
+			printf(" │     UPS!!      │  ■ 1- Logos  ■ 2- Estatisticas  ■ 3- Gráfico    ■ 4- Sobre │\n");
+			break;
 	}
 	printf(" └─┬──────────────┘──────────────────────────────────────────────────────────┬─┘\n");
 	if(hour>-1) printf("   ├─────────────────────────────[ ·∙   %s  ∙· ]──────────────────────────┤\n", make_hours(hour));
 	else printf("   ├─────────────────────────────[ ·∙  espera!  ∙· ]─────────────────────────┤\n");
 }
 
-void creat_graph(/*int aqua, int pool, int race, int race_status, int tobogan, int tobogan_status*/){
+// Função para obter percentagem de pessoas
+// int get_percent(int number){
+// 	float final_n;
+//
+// 	final_n = number * 7 / 60;
+//
+// 	// dif_tot = dif_tot + total_a;
+// 	// }
+// 	// ola_tot = (int)(dif_tot / total_int);
+// 	// final_tot = (int)round(ola_tot);
+//
+// 	return final_n;
+// }
 
-	float percent_aqua = (current_number(&*inicio_mr)*0.0033333)*20;
-	float percent_pool = (current_number(&*inicio_mr)*0.1)*20;
-	int tobogan = 2; //counter.tobogan;
+// Função para imprimir as carruagens e os graficos de pessoas no recinto e filas
+void creat_graph(){
+
+	float recinto =  rand()%7+1/*get_percent(counter.clientes_dentro)*/;
+	float fila_vip_frente = rand()%7+1/*get_percent(current_queue_size(3))*/;
+	float fila_vip = rand()%7+1/*get_percent(current_queue_size(2))*/;
+	float fila_normal = rand()%7+1/*get_percent(current_queue_size(1))*/;
+	//int car1 = 1;//counter.carruagem1;
+	int car2 = 2;//counter.carruagem2;
+
+	int tobogan = 0;
+	int percent_aqua = 0;
+	int percent_pool = 0;
 
 	int cheat1 = random()%100;
 	if(atraction == 1) {
-		if(cheat1 < 1) {
-			if(mister_cheat == 4) {
-				mister_cheat = 0;
+		if(cheat1 < 10) {
+			if(car1 == 20) {
+				car1 = 0;
 			}else{
-				mister_cheat++;
+				car1++;
 			}
 		}
-	}else if(mister_cheat != 0 ) {
-		mister_cheat--;
+	}else if(car1 != 0 ) {
+		car1--;
 	}
 
-	printf("   │                             ┌──────────────────────────────────────────┐│\n ");
-	printf("  │ ┌───────────────────────────┤             Real time events             ││\n");
-	printf("   │ │        Aquapark     Pool  └┬────────────────────────────────────────┬┘│\n");
-	printf("   │ │                            │                  Race                  │ │\n");
-	printf("   │ │100 % ┫    "); if(percent_aqua >= 20) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 20) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ ┌────────────────────────────────────┐ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 19) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 19) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │               "); if(mister_cheat == 4) {printf("On going");}else{printf(" Waiting");} printf("             │ │ │\n");
-	printf("   │ │ 90 % ┫    "); if(percent_aqua >= 18) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 18) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ ├─────────────────┰──────────────────┤ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 17) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 17) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │        "); if(mister_cheat==4) {printf("0");}else{printf(" ");} printf("        ╏         "); if(mister_cheat>=3) {printf("0");}else{printf(" ");} printf("        │ │ │\n");
-	printf("   │ │ 80 % ┫    "); if(percent_aqua >= 16) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 16) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │       "); if(mister_cheat==4) {printf("/█\\");}else{printf("   ");} printf("       ╏        "); if(mister_cheat>=3) {printf("/█\\");}else{printf("   ");} printf("       │ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 15) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 15) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │       "); if(mister_cheat==4) {printf(".Π.");}else{printf("   ");} printf("       ╏        "); if(mister_cheat>=3) {printf(".Π.");}else{printf("   ");} printf("       │ │ │\n");
-	printf("   │ │ 70 % ┫    "); if(percent_aqua >= 14) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 14) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╏╺╺╺╺╺╺╺╺╺╺╺╺╺╺╺╺╺╺│ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 13) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 13) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │        "); if(mister_cheat>=2) {printf("0");}else{printf(" ");} printf("        ╏         "); if(mister_cheat>=1) {printf("0");}else{printf(" ");} printf("        │ │ │\n");
-	printf("   │ │ 60 % ┫    "); if(percent_aqua >= 12) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 12) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │       "); if(mister_cheat>=2) {printf("/█\\");}else{printf("   ");} printf("       ╏        "); if(mister_cheat>=1) {printf("/█\\");}else{printf("   ");} printf("       │ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 11) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 11) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │       "); if(mister_cheat>=2) {printf(".Π.");}else{printf("   ");} printf("       ╏        "); if(mister_cheat>=1) {printf(".Π.");}else{printf("   ");} printf("       │ │ │\n");
-	printf("   │ │ 50 % ┫    "); if(percent_aqua >= 10) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 10) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ └─────────────────┸──────────────────┘ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 9) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 9) {printf("██"); percent_pool--;}else{printf("  ");} printf("    ├────────────────────────────────────────┤ │\n");
-	printf("   │ │ 40 % ┫    "); if(percent_aqua >= 8) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 8) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │                Tobogan                 │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 7) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 7) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ ┌────────────────────────────────────┐ │ │\n");
-	printf("   │ │ 30 % ┫    "); if(percent_aqua >= 6) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 6) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │              "); if(tobogan >= 2) {printf("On going");}else{printf(" Waiting");} printf("              │ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 5) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 5) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ ├─────────────────┰──────────────────┤ │ │\n");
-	printf("   │ │ 20 % ┫    "); if(percent_aqua >= 4) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 4) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │        "); if(tobogan>=2) {printf("0");}else{printf(" ");} printf("        ╏         "); if(tobogan>=1) {printf("0");}else{printf(" ");} printf("        │ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 3) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 3) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │       "); if(tobogan>=2) {printf("/█\\");}else{printf("   ");} printf("       ╏        "); if(tobogan>=1) {printf("/█\\");}else{printf("   ");} printf("       │ │ │\n");
-	printf("   │ │ 10 % ┫    "); if(percent_aqua >= 2) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 2) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ │       "); if(tobogan>=2) {printf(".Π.");}else{printf("   ");} printf("       ╏        "); if(tobogan>=1) {printf(".Π.");}else{printf("   ");} printf("       │ │ │\n");
-	printf("   │ │      ┃    "); if(percent_aqua >= 1) {printf("██"); percent_aqua--;}else{printf("  ");} printf("         "); if(percent_pool >= 1) {printf("██"); percent_pool--;}else{printf("  ");} printf("    │ └─────────────────┸──────────────────┘ │ │\n");
-	printf("   │ │      ┛                     │                                        │ │\n");
-	printf("   │ └────────────────────────────┴────────────────────────────────────────┘ │\n");
+	printf("   │                  ┌───────────────────────────────────┐                  │\n ");
+	printf("  │ ┌────────────────┤       Eventos em tempo real       ├────────────────┐ │\n");
+	printf("   │ │                └───────────────────────────────────┘                │ │\n");
+	printf("   │ │           Carruagem 1                         Carruagem 2           │ │\n");
+	printf("   │┌┴────────────────┴────────────────┐ ┌────────────────┴────────────────┴┐│\n");
+	printf("   ││  "); if(car1>=1){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=3){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=5){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=7){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=9){printf("0");}else{printf(" ");} printf("   │ │  "); if(car1>=11){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=13){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=15){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=17){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=19){printf("0");}else{printf(" ");} printf("   ││\n");
+	printf("   ││ "); if(car1>=1){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=3){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=5){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=7){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=9){printf("/█\\");}else{printf("   ");} printf("  │ │ "); if(car1>=11){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=13){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=15){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=17){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=19){printf("/█\\");}else{printf("   ");} printf("  ││\n");
+	printf("   ││ "); if(car1>=1){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=3){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=5){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=7){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=9){printf(".Π.");}else{printf("   ");} printf("  │ │ "); if(car1>=11){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=13){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=15){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=17){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=19){printf(".Π.");}else{printf("   ");} printf("  ││\n");
+	printf("   │├──────────────────────────────────┤-├──────────────────────────────────┤│\n");
+	printf("   ││  "); if(car1>=2){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=4){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=6){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=8){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=10){printf("0");}else{printf(" ");} printf("   │ │  "); if(car1>=12){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=14){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=16){printf("0");}else{printf(" ");} printf("   │  "); if(car1>=18){printf("0");}else{printf(" ");} printf("   │  "); if(car1==20){printf("0");}else{printf(" ");} printf("   ││\n");
+	printf("   ││ "); if(car1>=2){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=4){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=6){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=8){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=10){printf("/█\\");}else{printf("   ");} printf("  │ │ "); if(car1>=12){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=14){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=16){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1>=18){printf("/█\\");}else{printf("   ");} printf("  │ "); if(car1==20){printf("/█\\");}else{printf("   ");} printf("  ││\n");
+	printf("   ││ "); if(car1>=2){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=4){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=6){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=8){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=10){printf(".Π.");}else{printf("   ");} printf("  │ │ "); if(car1>=12){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=14){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=16){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1>=18){printf(".Π.");}else{printf("   ");} printf("  │ "); if(car1==20){printf(".Π.");}else{printf("   ");} printf("  ││\n");
+	printf("   │└┬─────────────────────────────────┘ └─────────────────────────────────┬┘│\n");
+	printf("   │ │    ⭕                      ⭕           ⭕                       ⭕     │ │\n");
+	printf("   │ │  ╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸╸  │ │\n");
+	printf("   │ ├─────────────────────────────────────────────────────────────────────┤ │\n");
+	printf("   │ │  60  ┫    "); if(recinto >= 7) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 7) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 7) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 7) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │  50  ┫    "); if(recinto >= 6) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 6) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 6) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 6) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │  40  ┫    "); if(recinto >= 5) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 5) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 5) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 5) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │  30  ┫    "); if(recinto >= 4) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 4) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 4) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 4) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │  20  ┫    "); if(recinto >= 3) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 3) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 3) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 3) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │  10  ┫    "); if(recinto >= 2) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 2) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 2) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 2) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │   0  ┫    "); if(recinto >= 1) {printf("██"); recinto--;}else{printf("  ");} printf("              "); if(fila_vip_frente >= 1) {printf("██"); fila_vip_frente--;}else{printf("  ");} printf("              "); if(fila_vip >= 1) {printf("██"); fila_vip--;}else{printf("  ");} printf("              "); if(fila_normal >= 1) {printf("██"); fila_normal--;}else{printf("  ");} printf("        │ │\n");
+	printf("   │ │      ┛                                                              │ │\n");
+	printf("   │ │         Recinto    Fila Vip Frente     Fila Vip      Fila Normal    │ │\n");
+	printf("   │ └─────────────────────────────────────────────────────────────────────┘ │\n");
 
 }
 
+// Função para imprimir estatisticas em tempo real
 void creat_stats (){
 
 	printf("   │   ■─[ Clientes ]────────────────────────────────────────────────────┐   │\n");
-	printf("   │   │   Total clientes na entrada                    :          %s   │   │\n",three_digit_number(number_counter(2)));
-	printf("   │   │   Total clientes na Montanha russa             :          %s   │   │\n",three_digit_number(number_counter(1)));
-	printf("   │   │   Total clientes na fila exterior              :          %s   │   │\n",three_digit_number(counter.clientes_fora));
-	printf("   │   │   Total clientes na fila interior              :          %s   │   │\n",three_digit_number(0));
+	printf("   │   │   Total de clientes                            :          %s   │   │\n",three_digit_number(number_counter(2))); // feito
+	printf("   │   │   Total de clientes que entraram no recinto    :  N       %s   │   │\n",three_digit_number(current_queue_size(1)/*number_counter(1)*/)); // feito
+	printf("   │   │   Total clientes na fila exterior              :  V       %s   │   │\n",three_digit_number(current_queue_size(2)/*counter.clientes_fora*/)); // feito
+	printf("   │   │   Total clientes nas filas interiores          :  VF      %s   │   │\n",three_digit_number(current_queue_size(3)/*counter.clientes_dentro*/)); // feito
 	printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 	printf("   │   ■─[ Desistencias ]────────────────────────────────────────────────┐   │\n");
 	printf("   │   │   Desistências na fila exterior                :          %s   │   │\n",three_digit_number(drop_counter(1))); // feito
@@ -829,52 +848,37 @@ void creat_stats (){
 	printf("   │   └─────────────────────────────────────────────────────────────────┘   │\n");
 }
 
+// Função de decisão para monitor
 void print_body(int tab){
 	int i;
 	switch(tab) {
 		case 0:
-		fill_empty(12);
-		printf("   │                      PRESSIONE ENTER PARA COMEÇAR                       │\n");
-		fill_empty(13);
-		break;
+			fill_empty(12);
+			printf("   │                      PRESSIONE ENTER PARA COMEÇAR                       │\n");
+			fill_empty(13);
+			break;
 		case 1:
-		fill_empty(1);
-		for(i=0; i<24; i++) write_decoder(real_time_log[i][0], real_time_log[i][1], real_time_log[i][2]);
-		fill_empty(1);
-		break;
-		case 2: creat_stats(); break;
-		case 3: creat_graph(); break;
+			fill_empty(1);
+			for(i=0; i<24; i++) write_decoder(real_time_log[i][0], real_time_log[i][1], real_time_log[i][2]);
+			fill_empty(1);
+			break;
+		case 2:
+			creat_stats();
+			break;
+		case 3:
+			creat_graph();
+			break;
 		case 4:
-		printf("   │                                                                         │\n   │   ■─[ Miguel Marques ]──────────────────────────────────────────────┐   │\n   │   │                                                                 │   │\n   │   │   2068614                                                     ┌─┤   │\n   │   └───────────────────────────────────────────────────────────────┴─┘   │\n   │                                                                         │\n   │   ■─[ Rúben Marques ]───────────────────────────────────────────────┐   │\n   │   │                                                                 │   │\n   │   │   2072212                                                     ┌─┤   │\n   │   └───────────────────────────────────────────────────────────────┴─┘   │\n   │                                                                         │\n   │   ■─[ Vitor Paixao ]────────────────────────────────────────────────┐   │\n   │   │                                                                 │   │\n   │   │   2023212                                                     ┌─┤   │\n   │   └───────────────────────────────────────────────────────────────┴─┘   │\n");
-		fill_empty(11);
-		break;
-		default: print_body(1); break;
+			printf("   │                                                                         │\n   │   ■─[ Miguel Marques ]──────────────────────────────────────────────┐   │\n   │   │                                                                 │   │\n   │   │   2068614                                                     ┌─┤   │\n   │   └───────────────────────────────────────────────────────────────┴─┘   │\n   │                                                                         │\n   │   ■─[ Rúben Marques ]───────────────────────────────────────────────┐   │\n   │   │                                                                 │   │\n   │   │   2072212                                                     ┌─┤   │\n   │   └───────────────────────────────────────────────────────────────┴─┘   │\n   │                                                                         │\n   │   ■─[ Vitor Paixao ]────────────────────────────────────────────────┐   │\n   │   │                                                                 │   │\n   │   │   2023212                                                     ┌─┤   │\n   │   └───────────────────────────────────────────────────────────────┴─┘   │\n");
+			fill_empty(11);
+			break;
+		default:
+			print_body(1);
+			break;
 	}
 }
+
+// Função par imprimir o footer
 void print_footer(){
 	printf("   └─────────────────────────────────────────────────────────────────────────┘\n   ┌─────────────────────────────────────────────────────────────────────────┐\n   │  Simulação - Montanha Russa                                ■ 5 - Saida  │\n");
-}
-
-void clear_memory(struct general *geral){
-
-	while (geral != NULL)
-	{
-		struct geral *next = geral->next;
-		free (geral->ID);
-		free (geral->chegada_mr);
-		free (geral->entrada_mr);
-		free (geral->saida_mr);
-		free (geral->entrada_car);
-		free (geral->saida_car);
-		free (geral->desistencia_ext);
-		free (geral->desistencia_int);
-		free (geral);
-		geral = next;
-	}
-	if(geral == NULL) {
-		printf("tá lá!!");
-	}
-	else{
-		printf("alguma coisa está mal!");
-	}
 }
