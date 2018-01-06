@@ -1,9 +1,9 @@
 //*****************************************************************
-//			Sistemas Operativos		- Projecto 2017/2018
+//	Sistemas Operativos		- Projecto 2017/2018
 //
-// 			Miguel Marques			- nº 2068614
-// 			Rúben Marques				- nº 2072212
-// 			Vitor Paixão				- nº 2021212
+// 	Miguel Marques			- nº 2068614
+// 	Rúben Marques			- nº 2072212
+// 	Vitor Paixão			- nº 2021212
 //*****************************************************************
 
 #include "unix.h"
@@ -30,6 +30,7 @@ char * make_hours(int input){
 
 	return string;
 }
+
 void send_message(int sockfd, int hour, int state, int client_id){
 	int i;
 	char buffer[27];
@@ -39,6 +40,7 @@ void send_message(int sockfd, int hour, int state, int client_id){
 	int n = write(sockfd,buffer,29);
 	if(n<0) printf("ERROR writing to socket\n");
 }
+
 char * read_message(int newsockfd){
 	char buffer[256];
 	bzero(buffer,256);
@@ -48,6 +50,7 @@ char * read_message(int newsockfd){
 
 	return buffer;
 }
+
 char * three_digit_number(int value){
 	//printf("%d\n", value);
 	static char string[3];
