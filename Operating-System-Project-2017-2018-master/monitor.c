@@ -17,7 +17,7 @@ int static hour=0;
 int static monitor_on=0;
 int static end_monitor = 1;
 
-// Função para construir ecrã
+// Função para construir e actualizar o ecrã
 int * print_screen(){
 	while (end_monitor) {
 		if(simulation==0 && monitor_on==0) tab=0;
@@ -91,7 +91,7 @@ int main(){
 	}
 
 	bzero(buffer,256);
-	if(pthread_create(&(t_print_screen), NULL,(int *)&print_screen,NULL) != 0) { //thread sunbath
+	if(pthread_create(&(t_print_screen), NULL,(int *)&print_screen,NULL) != 0) { //thread print_screen
 		printf("Error creating thread\n");
 		exit(1);
 	}
@@ -106,7 +106,7 @@ int main(){
 	tab=1;
 	monitor_on=1;
 
-	if(pthread_create(&(t_reader), NULL,(int *)&reader,NULL) != 0) { //thread sunbath
+	if(pthread_create(&(t_reader), NULL,(int *)&reader,NULL) != 0) { //thread reader
 		printf("Error creating thread\n");
 		exit(1);
 	}
