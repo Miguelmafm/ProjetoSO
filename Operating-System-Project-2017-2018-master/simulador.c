@@ -16,7 +16,6 @@ typedef struct {
 	int bilh_open;
 	int cap_carro1;
 	int cap_carro2;
-	int cap_f_interior;
 	int perc_cl_normal;
 	int mr_temp_volta;
 	int perc_cl_vip;
@@ -98,7 +97,6 @@ void * f_cliente (){ //funcao thread clientes
 	int random_desistecia = 0;
 	int tipo;
 	int cliente_chegou = 0;
-	int cliente_desiste = 30;
 	//0 -> Vip_Frente
 	//1 -> VIP
 	//2 -> Normal
@@ -107,7 +105,6 @@ void * f_cliente (){ //funcao thread clientes
 	pthread_mutex_lock(&trinco_id_cliente);
 	id_cliente=total_clientes ++;
 	cliente_chegou = simulator.minute;
-	cliente_desiste = 30;
 	numero_externos++;
 	pthread_mutex_unlock(&trinco_id_cliente);
 
@@ -615,7 +612,6 @@ int main(int argc, char **argv){
 	simulator.minute = simulator.mr_inicio;
 	simulator.cap_carro1 = configuration_values[4];
 	simulator.cap_carro2 = configuration_values[5];
-	simulator.cap_f_interior = configuration_values[6];
 	simulator.perc_cl_normal = configuration_values[7];
 	simulator.mr_temp_volta = configuration_values[8]*1000000;
 	simulator.perc_cl_vip = configuration_values[9];
@@ -629,7 +625,7 @@ int main(int argc, char **argv){
 	DEBUG = configuration_values[17];
 
 	if(DEBUG){
-		printf(" mr_pop_mr:%d\n mr_capacidade:%d\n mr_inicio:%d\n mr_fim:%d\n bilh_open:%d\n cap_carro1:%d\n cap_carro2:%d\n cap_f_interior:%d\n perc_cl_normal:%d\n mr_temp_volta:%d\n perc_cl_vip:%d\n perc_cl_vip_frente:%d\n perc_avaria:%d\n perc_des_fila_ext:%d\n perc_des_cl_normal:%d\n per_des_cl_vip:%d\n per_des_cl_vipf:%d\n", simulator.mr_pop_mr, simulator.mr_capacidade, simulator.mr_inicio,  simulator.mr_fim, simulator.bilh_open, simulator.cap_carro1, simulator.cap_carro2, simulator.cap_f_interior, simulator.perc_cl_normal, simulator.mr_temp_volta, simulator.perc_cl_vip, simulator.perc_cl_vip_frente, simulator.perc_avaria, simulator.perc_des_fila_ext, simulator.perc_des_cl_normal, simulator.per_des_cl_vip, simulator.per_des_cl_vipf);
+		printf(" mr_pop_mr:%d\n mr_capacidade:%d\n mr_inicio:%d\n mr_fim:%d\n bilh_open:%d\n cap_carro1:%d\n cap_carro2:%d\n  perc_cl_normal:%d\n mr_temp_volta:%d\n perc_cl_vip:%d\n perc_cl_vip_frente:%d\n perc_avaria:%d\n perc_des_fila_ext:%d\n perc_des_cl_normal:%d\n per_des_cl_vip:%d\n per_des_cl_vipf:%d\n", simulator.mr_pop_mr, simulator.mr_capacidade, simulator.mr_inicio,  simulator.mr_fim, simulator.bilh_open, simulator.cap_carro1, simulator.cap_carro2,  simulator.perc_cl_normal, simulator.mr_temp_volta, simulator.perc_cl_vip, simulator.perc_cl_vip_frente, simulator.perc_avaria, simulator.perc_des_fila_ext, simulator.perc_des_cl_normal, simulator.per_des_cl_vip, simulator.per_des_cl_vipf);
 	}
 
 	/****************************** Semaphores and mutex init ********************************/
