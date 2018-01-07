@@ -30,9 +30,8 @@ int * print_screen(){
 	}
 }
 
-// Função para enviar
+// Função para ler teclas introduzidas
 int * reader(){
-	// this should go to the reader at some point
 	int choice;
 	while(monitor_on) {
 		scanf("%d",&choice);
