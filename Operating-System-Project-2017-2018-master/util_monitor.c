@@ -318,7 +318,7 @@ void insert_struct_breakdowns(struct breakdowns *a, int hour, breakdowns *estr){
 
 	a = (struct breakdowns*) malloc(sizeof(struct breakdowns));
 
-	general *aux = &*estr;
+	breakdowns *aux = &*estr;
 
 	a->hora_avaria = hour;
 	a->hora_inicio_rep = 0;
@@ -686,7 +686,7 @@ void write_decoder(int hour, int state, int client_id) {
 	switch(state) {
 		case 1: printf("   │  [%s] ❤ Cliente",make_hours(hour)); printf(" %s chegou à Montanha Russa                          │\n", three_digit_number(client_id)); break;
 
-		case 11: printf("   │\033[31m  [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa       \033[0m│\n", three_digit_number(client_id)); break;
+		case 11: printf("   │  [%s] ➤ Cliente Normal",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa       │\n", three_digit_number(client_id)); break;
 		case 12: printf("   │  [%s] ➤ Cliente Vip",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa          │\n", three_digit_number(client_id)); break;
 		case 13: printf("   │  [%s] ➤ Cliente Vip_frente",make_hours(hour)); printf(" %s entrou no recinto da Montanha Russa   │\n", three_digit_number(client_id)); break;
 

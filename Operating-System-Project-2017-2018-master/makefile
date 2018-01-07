@@ -6,8 +6,8 @@
 # 		Vitor Paixão				- nº 2021212
 #*****************************************************************
 
-RUNMO = ./monitor
-RUNSI = ./simulador
+RUNMO =  ./monitor
+RUNSI =  ./simulador
 CC = gcc -o
 CFLAGS = -g
 LIBS = -lns -lnsl
