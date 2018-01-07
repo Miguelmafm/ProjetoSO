@@ -57,8 +57,8 @@ pthread_t t_montanha_russa;
 pthread_t t_mecanico;
 pthread_t t_bilheteira;
 
-sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_cap_carro1, s_cap_carro2, s_viagem_mr, s_inicia_viagem, s_terminou_viagem, s_avaria, s_reparacao_feita,s_carruagens;
-pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto, trinco_comunicate, trinco_id_cliente, trinco_tipo_cliente, trinco_desistencia, trinco_sai_recinto_ext, trinco_fecha_bilheteira, trinco_sai_carrinho, trinco_totalClientesCarros;
+sem_t s_recinto,s_vip_frente, s_normal, s_vip, s_viagem_mr, s_inicia_viagem, s_terminou_viagem, s_avaria, s_reparacao_feita,s_carruagens;
+pthread_mutex_t trinco_recinto, trinco_vip_frente, trinco_vip, trinco_normal, trinco_carro1, trinco_carro2, trinco_sai_recinto, trinco_comunicate, trinco_id_cliente, trinco_tipo_cliente, trinco_desistencia, trinco_sai_recinto_ext, trinco_totalClientesCarros;
 
 /*********************************** Functions *******************************************/
 
@@ -634,10 +634,8 @@ int main(int argc, char **argv){
 	sem_init(&s_vip_frente,0,0);
 	sem_init(&s_vip,0,0);
 	sem_init(&s_normal,0,0);
-	sem_init(&s_cap_carro1,0,simulator.cap_carro1);
-	sem_init(&s_cap_carro2,0,simulator.cap_carro2);
 	sem_init(&s_viagem_mr,0,0);
-	sem_init(&s_carruagens,0,20);
+	sem_init(&s_carruagens,0,simulator.cap_carro1+simulator.cap_carro2);
 	sem_init(&s_inicia_viagem,0,0);
 	sem_init(&s_terminou_viagem,0,0);
 	sem_init(&s_avaria,0,0);
@@ -655,10 +653,7 @@ int main(int argc, char **argv){
 	pthread_mutex_init(&trinco_id_cliente,NULL);
 	pthread_mutex_init(&trinco_tipo_cliente,NULL);
 	pthread_mutex_init(&trinco_desistencia,NULL);
-	pthread_mutex_init(&trinco_fecha_bilheteira,NULL);
-	pthread_mutex_init(&trinco_sai_carrinho,NULL);
 	pthread_mutex_init(&trinco_totalClientesCarros,NULL);
-
 
 	/**************************** Initializes global variables *******************************/
 
